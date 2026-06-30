@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "رايز غايد",
+    "slug": "arabic-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "arabic-app",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.riseguide.arabic"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1A3A5C",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "package": "com.riseguide.arabic"
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "YOUR_SENTRY_ORG",
+          "project": "arabic-app"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
