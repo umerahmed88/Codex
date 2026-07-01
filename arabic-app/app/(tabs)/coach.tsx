@@ -95,6 +95,7 @@ export default function CoachScreen() {
 
       <View style={styles.inputRow}>
         <TextInput
+          testID="coach-input"
           style={styles.input}
           value={input}
           onChangeText={setInput}
