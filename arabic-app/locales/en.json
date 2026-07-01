@@ -45,7 +45,8 @@
     "thinking": "Coach is thinking...",
     "error": "Couldn't get an answer. Please try again.",
     "rateLimited": "You've used your free questions for today. Subscribe for unlimited questions.",
-    "remaining": "{{count}} questions left today"
+    "remaining": "{{count}} questions left today",
+    "disabled": "The AI Coach is temporarily unavailable. We'll be back soon."
   },
   "profile": {
     "title": "My Profile",
@@ -132,5 +133,25 @@
     "logout": "Log Out",
     "errorGeneric": "Could not complete that. Check your details and try again.",
     "signupSuccess": "Account created! You can now log in."
+  },
+  "feedback": {
+    "title": "Send feedback",
+    "open": "Send feedback",
+    "intro": "Your input helps us improve the app.",
+    "categoryBug": "Bug",
+    "categoryIdea": "Idea",
+    "categoryContent": "Content error",
+    "categoryOther": "Other",
+    "placeholder": "Write your feedback here...",
+    "submit": "Send",
+    "submitting": "Sending...",
+    "success": "Thank you! Your feedback was received.",
+    "error": "Could not send. Please try again.",
+    "tooShort": "Please add a little more detail."
+  },
+  "update": {
+    "title": "Update required",
+    "body": "Please update to the latest version to keep using the app.",
+    "button": "Update now"
   }
 }

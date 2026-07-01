@@ -8,6 +8,7 @@ import { useAuth } from '../../src/lib/AuthProvider';
 import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useStreak, useXp } from '../../src/hooks/useStreakXp';
 import { useNotificationSettings } from '../../src/hooks/useNotificationSettings';
+import { useFeatureFlag } from '../../src/hooks/useAppConfig';
 import { StreakBadge } from '../../src/components/StreakBadge';
 import { LevelProgress } from '../../src/components/LevelProgress';
 import { isStreakActive, toDayString } from '../../src/lib/streak';
@@ -27,6 +28,7 @@ export default function ProfileScreen() {
   const { data: streak } = useStreak(userId);
   const { data: xp } = useXp(userId);
   const { settings, update } = useNotificationSettings();
+  const feedbackEnabled = useFeatureFlag('feedback');
 
   // "Manage subscription" deep-links to the store's subscription settings.
   const manageSubscription = () => {
@@ -114,6 +116,16 @@ export default function ProfileScreen() {
           />
         )}
       </View>
+
+      {feedbackEnabled && (
+        <Pressable
+          style={styles.langButton}
+          onPress={() => router.push('/feedback')}
+          accessibilityRole="button"
+        >
+          <Text style={styles.langButtonText}>{t('feedback.open')}</Text>
+        </Pressable>
+      )}
 
       <Pressable style={styles.langButton} onPress={toggleLocale}>
         <Text style={styles.langButtonText}>

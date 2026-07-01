@@ -11,6 +11,7 @@ import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { AuthProvider, useAuth } from '../src/lib/AuthProvider';
 import { SubscriptionProvider } from '../src/lib/SubscriptionProvider';
 import { useOnboarding } from '../src/hooks/useOnboarding';
+import { UpdateGate } from '../src/components/UpdateGate';
 import { StatusBar } from 'expo-status-bar';
 
 // Force RTL globally before any layout is computed
@@ -59,11 +60,14 @@ function AuthGate() {
   return (
     <View style={{ flex: 1 }}>
       <OfflineBanner />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(onboarding)" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
+      <UpdateGate>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(onboarding)" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="feedback" options={{ presentation: 'modal' }} />
+        </Stack>
+      </UpdateGate>
     </View>
   );
 }
