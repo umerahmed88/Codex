@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../src/lib/AuthProvider';
+import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useTrackData } from '../../src/hooks/useTrackData';
 import { useStreak, useXp } from '../../src/hooks/useStreakXp';
 import { useCompleteLesson } from '../../src/hooks/useCompleteLesson';
+import { shouldShowPaywall } from '../../src/lib/entitlements';
 import { milestoneForStreak, type Milestone } from '../../src/lib/milestones';
 import { Button } from '../../src/components/Button';
 import { MilestoneCelebration } from '../../src/components/MilestoneCelebration';
@@ -18,6 +20,7 @@ export default function LessonPlayerScreen() {
   const { session } = useAuth();
   const userId = session?.user.id;
 
+  const { isSubscribed } = useSubscription();
   const { lessons, rawLessons, isLoading, isError } = useTrackData(userId);
   const { data: streak } = useStreak(userId);
   const { data: xp } = useXp(userId);
@@ -26,6 +29,14 @@ export default function LessonPlayerScreen() {
 
   const merged = lessons.find((l) => l.id === id);
   const raw = rawLessons?.find((l) => l.id === id);
+
+  // Deep-link guard: if this lesson is premium and the user isn't subscribed,
+  // send them to the paywall instead of showing the content.
+  useEffect(() => {
+    if (merged && shouldShowPaywall(merged, isSubscribed)) {
+      router.replace('/paywall');
+    }
+  }, [merged, isSubscribed, router]);
 
   if (isLoading) {
     return (

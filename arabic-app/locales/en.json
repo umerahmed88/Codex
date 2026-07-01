@@ -39,7 +39,13 @@
   "coach": {
     "title": "AI Coach",
     "placeholder": "Ask your coach...",
-    "send": "Send"
+    "send": "Send",
+    "intro": "Ask me anything about communication and charisma — I'll answer from your lessons.",
+    "source": "Source: {{title}}",
+    "thinking": "Coach is thinking...",
+    "error": "Couldn't get an answer. Please try again.",
+    "rateLimited": "You've used your free questions for today. Subscribe for unlimited questions.",
+    "remaining": "{{count}} questions left today"
   },
   "profile": {
     "title": "My Profile",
@@ -49,7 +55,12 @@
     "reminderTitle": "Daily reminder",
     "reminderEnabled": "Enable reminder",
     "reminderTime": "Reminder time",
-    "reminderDenied": "Notifications not allowed. You can enable them in system settings."
+    "reminderDenied": "Notifications not allowed. You can enable them in system settings.",
+    "manageSubscription": "Manage subscription",
+    "upgrade": "Upgrade to Premium",
+    "privacyPolicy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "subscribed": "Subscribed ✓"
   },
   "gamify": {
     "level": "Level {{level}}",
@@ -58,8 +69,49 @@
     "nextMilestone": "{{count}} days to your next milestone",
     "longest": "Longest streak: {{count}}"
   },
+  "paywall": {
+    "title": "Unlock all lessons",
+    "subtitle": "Subscribe for full access to every lesson and unlimited AI coaching.",
+    "benefit1": "All communication & charisma lessons",
+    "benefit2": "Unlimited AI coach questions",
+    "benefit3": "New lessons every week",
+    "renewalTerms": "Auto-renews at {{price}} every {{period}}. Cancel anytime in your store settings.",
+    "subscribe": "Subscribe Now",
+    "restore": "Restore Purchases",
+    "close": "Close",
+    "loading": "Loading plans...",
+    "unavailable": "Plans aren't available right now. Please try later.",
+    "purchaseError": "Couldn't complete the purchase. Please try again.",
+    "period": {
+      "P4W": "4 weeks",
+      "P12W": "12 weeks",
+      "P24W": "24 weeks",
+      "default": "period"
+    }
+  },
   "debug": {
     "testCrash": "Test Crash Report"
+  },
+  "onboarding": {
+    "slide1Title": "Grow every day",
+    "slide1Body": "Short daily lessons in communication and charisma, built for you in Arabic.",
+    "slide2Title": "What do you want to improve?",
+    "slide2Body": "Pick an interest so we can tailor your journey.",
+    "slide3Title": "Never miss a lesson",
+    "slide3Body": "Turn on a daily reminder to build a habit that lasts.",
+    "interestCommunication": "Communication",
+    "interestConfidence": "Confidence",
+    "interestLeadership": "Leadership",
+    "enableReminder": "Enable daily reminder",
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Let's start"
+  },
+  "common": {
+    "offline": "No internet connection",
+    "offlineHint": "Check your connection and try again.",
+    "loading": "Loading...",
+    "retry": "Try Again"
   },
   "auth": {
     "loginTitle": "Welcome back",

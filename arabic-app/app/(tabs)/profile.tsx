@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Switch, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Switch, Platform, Linking, ScrollView } from 'react-native';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../src/lib/i18n';
 import { useAuth } from '../../src/lib/AuthProvider';
+import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useStreak, useXp } from '../../src/hooks/useStreakXp';
 import { useNotificationSettings } from '../../src/hooks/useNotificationSettings';
 import { StreakBadge } from '../../src/components/StreakBadge';
@@ -11,14 +13,29 @@ import { LevelProgress } from '../../src/components/LevelProgress';
 import { isStreakActive, toDayString } from '../../src/lib/streak';
 import { colors, spacing, typography, radius } from '../../src/theme';
 
+// TODO: replace with your real hosted legal pages before store submission.
+const PRIVACY_URL = 'https://example.com/privacy';
+const TERMS_URL = 'https://example.com/terms';
+
 export default function ProfileScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
   const { signOut, session } = useAuth();
+  const { isSubscribed } = useSubscription();
   const userId = session?.user.id;
 
   const { data: streak } = useStreak(userId);
   const { data: xp } = useXp(userId);
   const { settings, update } = useNotificationSettings();
+
+  // "Manage subscription" deep-links to the store's subscription settings.
+  const manageSubscription = () => {
+    const url =
+      Platform.OS === 'ios'
+        ? 'https://apps.apple.com/account/subscriptions'
+        : 'https://play.google.com/store/account/subscriptions';
+    Linking.openURL(url);
+  };
 
   const [showPicker, setShowPicker] = useState(false);
   const [denied, setDenied] = useState(false);
@@ -46,7 +63,7 @@ export default function ProfileScreen() {
   const timeLabel = `${String(settings.hour).padStart(2, '0')}:${String(settings.minute).padStart(2, '0')}`;
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>{t('profile.title')}</Text>
 
       {/* Streak + level */}
@@ -56,6 +73,23 @@ export default function ProfileScreen() {
           <Text style={styles.longest}>{t('gamify.longest', { count: streakState.longest_streak })}</Text>
         </View>
         <LevelProgress totalXp={xp?.total_xp ?? 0} />
+      </View>
+
+      {/* Subscription */}
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>{t('profile.manageSubscription')}</Text>
+        {isSubscribed ? (
+          <View style={styles.settingRow}>
+            <Text style={styles.subscribed}>{t('profile.subscribed')}</Text>
+            <Pressable onPress={manageSubscription} accessibilityRole="link">
+              <Text style={styles.link}>{t('profile.manageSubscription')}</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable style={styles.upgradeButton} onPress={() => router.push('/paywall')}>
+            <Text style={styles.upgradeText}>{t('profile.upgrade')}</Text>
+          </Pressable>
+        )}
       </View>
 
       {/* Daily reminder */}
@@ -90,12 +124,24 @@ export default function ProfileScreen() {
       <Pressable style={styles.logoutButton} onPress={() => signOut()}>
         <Text style={styles.logoutText}>{t('auth.logout')}</Text>
       </Pressable>
-    </View>
+
+      {/* Legal links — required for store approval */}
+      <View style={styles.legalRow}>
+        <Pressable onPress={() => Linking.openURL(PRIVACY_URL)} accessibilityRole="link">
+          <Text style={styles.legalLink}>{t('profile.privacyPolicy')}</Text>
+        </Pressable>
+        <Text style={styles.legalDot}>•</Text>
+        <Pressable onPress={() => Linking.openURL(TERMS_URL)} accessibilityRole="link">
+          <Text style={styles.legalLink}>{t('profile.terms')}</Text>
+        </Pressable>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, padding: spacing.lg },
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: spacing.lg },
   title: {
     fontFamily: typography.fontFamily.arabicBold,
     fontSize: typography.size.xxl,
@@ -174,4 +220,38 @@ const styles = StyleSheet.create({
     fontSize: typography.size.md,
     color: colors.error,
   },
+  subscribed: {
+    fontFamily: typography.fontFamily.arabicSemiBold,
+    fontSize: typography.size.md,
+    color: colors.success,
+  },
+  link: {
+    fontFamily: typography.fontFamily.arabic,
+    fontSize: typography.size.sm,
+    color: colors.primaryLight,
+  },
+  upgradeButton: {
+    backgroundColor: colors.accent,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  upgradeText: {
+    fontFamily: typography.fontFamily.arabicBold,
+    fontSize: typography.size.md,
+    color: colors.primaryDark,
+  },
+  legalRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+  },
+  legalLink: {
+    fontFamily: typography.fontFamily.arabic,
+    fontSize: typography.size.sm,
+    color: colors.textMuted,
+  },
+  legalDot: { color: colors.textMuted },
 });
