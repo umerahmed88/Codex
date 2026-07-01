@@ -34,5 +34,25 @@
   },
   "debug": {
     "testCrash": "Test Crash Report"
+  },
+  "auth": {
+    "loginTitle": "Welcome back",
+    "signupTitle": "Create your account",
+    "email": "Email",
+    "password": "Password",
+    "displayName": "Name",
+    "loginButton": "Log In",
+    "signupButton": "Sign Up",
+    "toSignup": "No account? Create one",
+    "toLogin": "Have an account? Log in",
+    "forgotPassword": "Forgot password?",
+    "resetTitle": "Reset password",
+    "resetButton": "Send reset link",
+    "resetSent": "A reset link has been sent to your email.",
+    "appleSignIn": "Continue with Apple",
+    "googleSignIn": "Continue with Google",
+    "logout": "Log Out",
+    "errorGeneric": "Could not complete that. Check your details and try again.",
+    "signupSuccess": "Account created! You can now log in."
   }
 }

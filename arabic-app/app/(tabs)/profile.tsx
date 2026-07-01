@@ -1,11 +1,12 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../src/lib/i18n';
+import { useAuth } from '../../src/lib/AuthProvider';
 import { colors, spacing, typography, radius } from '../../src/theme';
-import { Pressable } from 'react-native';
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
+  const { signOut } = useAuth();
 
   const toggleLocale = () => {
     const next = i18n.language === 'ar' ? 'en' : 'ar';
@@ -32,6 +33,11 @@ export default function ProfileScreen() {
         <Text style={styles.langButtonText}>
           {i18n.language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
         </Text>
+      </Pressable>
+
+      {/* Log out — clears the session; the AuthGate then returns to login. */}
+      <Pressable style={styles.logoutButton} onPress={() => signOut()}>
+        <Text style={styles.logoutText}>{t('auth.logout')}</Text>
       </Pressable>
     </View>
   );
@@ -84,5 +90,18 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.arabic,
     fontSize: typography.size.md,
     color: colors.textInverse,
+  },
+  logoutButton: {
+    marginTop: spacing.md,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.error,
+  },
+  logoutText: {
+    fontFamily: typography.fontFamily.arabicSemiBold,
+    fontSize: typography.size.md,
+    color: colors.error,
   },
 });

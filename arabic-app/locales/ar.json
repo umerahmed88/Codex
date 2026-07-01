@@ -34,5 +34,25 @@
   },
   "debug": {
     "testCrash": "اختبار تقرير الأعطال"
+  },
+  "auth": {
+    "loginTitle": "مرحباً بعودتك",
+    "signupTitle": "أنشئ حسابك",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "displayName": "الاسم",
+    "loginButton": "تسجيل الدخول",
+    "signupButton": "إنشاء حساب",
+    "toSignup": "ليس لديك حساب؟ أنشئ واحداً",
+    "toLogin": "لديك حساب؟ سجّل الدخول",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "resetTitle": "إعادة تعيين كلمة المرور",
+    "resetButton": "إرسال رابط الإعادة",
+    "resetSent": "تم إرسال رابط إعادة التعيين إلى بريدك.",
+    "appleSignIn": "المتابعة عبر Apple",
+    "googleSignIn": "المتابعة عبر Google",
+    "logout": "تسجيل الخروج",
+    "errorGeneric": "تعذّر إتمام العملية. تحقّق من بياناتك وحاول مجدداً.",
+    "signupSuccess": "تم إنشاء الحساب! يمكنك الآن تسجيل الدخول."
   }
 }
