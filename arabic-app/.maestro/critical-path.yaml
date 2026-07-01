@@ -1,0 +1,52 @@
+# ============================================================================
+# Maestro E2E flow — the critical path the plan calls for:
+#   onboarding → log in → complete a lesson → hit the paywall → ask the coach
+#
+# Maestro drives the REAL app on a device/emulator (it can't run in Codespaces).
+# Run locally against a dev build with a seeded Supabase backend:
+#   maestro test .maestro/critical-path.yaml
+#
+# Selectors use visible Arabic text. For long-term robustness, add matching
+# testID props to the key elements and switch these to `id:` selectors.
+# ============================================================================
+appId: com.riseguide.arabic
+---
+- launchApp:
+    clearState: true   # force the first-run onboarding
+
+# --- Onboarding (3 slides) --------------------------------------------------
+- assertVisible: "طوّر نفسك كل يوم"
+- tapOn: "التالي"          # slide 1 → 2
+- tapOn: "التواصل الفعّال"  # pick an interest
+- tapOn: "التالي"          # slide 2 → 3
+- tapOn: "لنبدأ"           # finish onboarding
+
+# --- Log in -----------------------------------------------------------------
+- assertVisible: "مرحباً بعودتك"
+- tapOn:
+    id: "email"           # add testID="email" to the login TextField
+- inputText: "test@example.com"
+- tapOn:
+    id: "password"
+- inputText: "password123"
+- tapOn: "تسجيل الدخول"
+
+# --- Complete the free lesson ----------------------------------------------
+- assertVisible: "درس اليوم"
+- tapOn: "ابدأ الدرس"
+- tapOn: "إكمال الدرس"     # awards XP, advances streak, unlocks next
+
+# --- Hit the paywall on a premium lesson -----------------------------------
+- tapOn: "تعلّم"           # Learn tab
+- tapOn:
+    index: 1              # second lesson (premium)
+- assertVisible: "افتح كل الدروس"   # paywall appeared
+- tapOn: "إغلاق"
+
+# --- Ask the coach ----------------------------------------------------------
+- tapOn: "المدرب"          # Coach tab
+- tapOn:
+    id: "coach-input"      # add testID="coach-input" to the coach TextInput
+- inputText: "كيف أبدأ محادثة؟"
+- tapOn: "إرسال"
+- assertVisible: "المصدر:"  # a grounded answer with a citation came back
