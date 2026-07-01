@@ -2,11 +2,14 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-nati
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/lib/AuthProvider';
+import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useTrackData } from '../../src/hooks/useTrackData';
 import { useStreak } from '../../src/hooks/useStreakXp';
 import { selectTodaysLesson } from '../../src/lib/lessonProgress';
+import { shouldShowPaywall } from '../../src/lib/entitlements';
 import { isStreakActive, toDayString } from '../../src/lib/streak';
 import { StreakBadge } from '../../src/components/StreakBadge';
+import type { LessonWithProgress } from '../../src/types/database';
 import { colors, spacing, typography, radius, shadows } from '../../src/theme';
 
 export default function TodayScreen() {
@@ -15,8 +18,18 @@ export default function TodayScreen() {
   const { session } = useAuth();
   const userId = session?.user.id;
 
+  const { isSubscribed } = useSubscription();
   const { lessons, isLoading, isError } = useTrackData(userId);
   const { data: streak } = useStreak(userId);
+
+  // Open a lesson, or divert to the paywall if it's premium and locked behind it.
+  const openLesson = (lesson: LessonWithProgress) => {
+    if (shouldShowPaywall(lesson, isSubscribed)) {
+      router.push('/paywall');
+    } else {
+      router.push(`/lesson/${lesson.id}`);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -57,7 +70,7 @@ export default function TodayScreen() {
           <Text style={styles.cardMeta}>{t('today.minutes', { count: todaysLesson.est_minutes })}</Text>
           <Pressable
             style={styles.startButton}
-            onPress={() => router.push(`/lesson/${todaysLesson.id}`)}
+            onPress={() => openLesson(todaysLesson)}
           >
             <Text style={styles.startButtonText}>{t('today.start')}</Text>
           </Pressable>

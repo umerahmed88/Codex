@@ -8,6 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { AuthProvider, useAuth } from '../src/lib/AuthProvider';
+import { SubscriptionProvider } from '../src/lib/SubscriptionProvider';
 import { StatusBar } from 'expo-status-bar';
 
 // Force RTL globally before any layout is computed
@@ -75,8 +76,10 @@ export default function RootLayout() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <StatusBar style="light" />
-          <AuthGate />
+          <SubscriptionProvider>
+            <StatusBar style="light" />
+            <AuthGate />
+          </SubscriptionProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>

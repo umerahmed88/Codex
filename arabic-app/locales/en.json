@@ -64,6 +64,26 @@
     "nextMilestone": "{{count}} days to your next milestone",
     "longest": "Longest streak: {{count}}"
   },
+  "paywall": {
+    "title": "Unlock all lessons",
+    "subtitle": "Subscribe for full access to every lesson and unlimited AI coaching.",
+    "benefit1": "All communication & charisma lessons",
+    "benefit2": "Unlimited AI coach questions",
+    "benefit3": "New lessons every week",
+    "renewalTerms": "Auto-renews at {{price}} every {{period}}. Cancel anytime in your store settings.",
+    "subscribe": "Subscribe Now",
+    "restore": "Restore Purchases",
+    "close": "Close",
+    "loading": "Loading plans...",
+    "unavailable": "Plans aren't available right now. Please try later.",
+    "purchaseError": "Couldn't complete the purchase. Please try again.",
+    "period": {
+      "P4W": "4 weeks",
+      "P12W": "12 weeks",
+      "P24W": "24 weeks",
+      "default": "period"
+    }
+  },
   "debug": {
     "testCrash": "Test Crash Report"
   },

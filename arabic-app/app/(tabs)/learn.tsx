@@ -2,7 +2,9 @@ import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator } from '
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/lib/AuthProvider';
+import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useTrackData } from '../../src/hooks/useTrackData';
+import { shouldShowPaywall } from '../../src/lib/entitlements';
 import type { LessonWithProgress } from '../../src/types/database';
 import { colors, spacing, typography, radius } from '../../src/theme';
 
@@ -10,7 +12,16 @@ export default function LearnScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { session } = useAuth();
+  const { isSubscribed } = useSubscription();
   const { lessons, isLoading, isError } = useTrackData(session?.user.id);
+
+  const openLesson = (lesson: LessonWithProgress) => {
+    if (shouldShowPaywall(lesson, isSubscribed)) {
+      router.push('/paywall');
+    } else {
+      router.push(`/lesson/${lesson.id}`);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -34,7 +45,7 @@ export default function LearnScreen() {
         data={lessons}
         keyExtractor={(l) => l.id}
         ListEmptyComponent={<Text style={styles.empty}>{t('learn.empty')}</Text>}
-        renderItem={({ item }) => <LessonRow lesson={item} onPress={() => router.push(`/lesson/${item.id}`)} />}
+        renderItem={({ item }) => <LessonRow lesson={item} onPress={() => openLesson(item)} />}
       />
     </View>
   );

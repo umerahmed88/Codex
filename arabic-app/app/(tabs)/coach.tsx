@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../src/lib/AuthProvider';
+import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useAskCoach, useCoachQuestionsToday } from '../../src/hooks/useCoach';
 import { remainingQuestions, type CoachTurn } from '../../src/lib/coach';
 import { colors, spacing, typography, radius } from '../../src/theme';
@@ -28,9 +29,10 @@ export default function CoachScreen() {
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
 
+  const { isSubscribed } = useSubscription();
   const ask = useAskCoach();
   const { data: askedToday = 0, refetch } = useCoachQuestionsToday(userId);
-  const left = remainingQuestions(askedToday, false); // paid status wired in Phase 6
+  const left = remainingQuestions(askedToday, isSubscribed);
 
   const handleSend = () => {
     const question = input.trim();
