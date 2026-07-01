@@ -39,7 +39,13 @@
   "coach": {
     "title": "AI Coach",
     "placeholder": "Ask your coach...",
-    "send": "Send"
+    "send": "Send",
+    "intro": "Ask me anything about communication and charisma — I'll answer from your lessons.",
+    "source": "Source: {{title}}",
+    "thinking": "Coach is thinking...",
+    "error": "Couldn't get an answer. Please try again.",
+    "rateLimited": "You've used your free questions for today. Subscribe for unlimited questions.",
+    "remaining": "{{count}} questions left today"
   },
   "profile": {
     "title": "My Profile",

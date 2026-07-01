@@ -9,5 +9,6 @@
       "@/locales/*": ["locales/*"]
     },
     "types": ["jest"]
-  }
+  },
+  "exclude": ["supabase/functions"]
 }
