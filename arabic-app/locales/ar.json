@@ -13,13 +13,28 @@
   "today": {
     "title": "درس اليوم",
     "greeting": "أهلاً بك",
-    "start": "ابدأ الدرس"
+    "start": "ابدأ الدرس",
+    "minutes": "{{count}} دقائق",
+    "allDone": "أحسنت! أكملت كل الدروس المتاحة اليوم.",
+    "tomorrowPreview": "درس الغد",
+    "loading": "جارٍ التحميل...",
+    "errorLoading": "تعذّر تحميل الدرس. حاول مرة أخرى."
+  },
+  "lesson": {
+    "markComplete": "إكمال الدرس",
+    "completed": "تم الإكمال ✓",
+    "xpEarned": "+{{xp}} نقطة",
+    "completing": "جارٍ الحفظ...",
+    "savedOffline": "سيُحفظ تقدّمك عند عودة الاتصال."
   },
   "learn": {
     "title": "دروسك",
     "locked": "مقفل",
     "available": "متاح",
-    "completed": "مكتمل"
+    "completed": "مكتمل",
+    "empty": "لا توجد دروس بعد.",
+    "loading": "جارٍ التحميل...",
+    "error": "تعذّر تحميل الدروس."
   },
   "coach": {
     "title": "المدرب الذكي",

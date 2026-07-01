@@ -13,13 +13,28 @@
   "today": {
     "title": "Today's Lesson",
     "greeting": "Welcome back",
-    "start": "Start Lesson"
+    "start": "Start Lesson",
+    "minutes": "{{count}} min",
+    "allDone": "Well done! You've finished all available lessons for today.",
+    "tomorrowPreview": "Tomorrow's lesson",
+    "loading": "Loading...",
+    "errorLoading": "Could not load your lesson. Try again."
+  },
+  "lesson": {
+    "markComplete": "Mark Complete",
+    "completed": "Completed ✓",
+    "xpEarned": "+{{xp}} XP",
+    "completing": "Saving...",
+    "savedOffline": "Your progress will save when you're back online."
   },
   "learn": {
     "title": "Your Lessons",
     "locked": "Locked",
     "available": "Available",
-    "completed": "Completed"
+    "completed": "Completed",
+    "empty": "No lessons yet.",
+    "loading": "Loading...",
+    "error": "Could not load lessons."
   },
   "coach": {
     "title": "AI Coach",

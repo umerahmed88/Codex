@@ -1,10 +1,16 @@
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Text } from 'react-native';
+import { useAuth } from '../../src/lib/AuthProvider';
+import { useOfflineSync } from '../../src/hooks/useOfflineSync';
 import { colors, typography } from '../../src/theme';
 
 export default function TabLayout() {
   const { t } = useTranslation();
+  const { session } = useAuth();
+
+  // Flush any offline-queued lesson completions once the user is in the app.
+  useOfflineSync(session?.user.id);
 
   return (
     <Tabs
