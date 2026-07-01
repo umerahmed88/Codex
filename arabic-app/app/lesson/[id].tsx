@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -5,7 +6,9 @@ import { useAuth } from '../../src/lib/AuthProvider';
 import { useTrackData } from '../../src/hooks/useTrackData';
 import { useStreak, useXp } from '../../src/hooks/useStreakXp';
 import { useCompleteLesson } from '../../src/hooks/useCompleteLesson';
+import { milestoneForStreak, type Milestone } from '../../src/lib/milestones';
 import { Button } from '../../src/components/Button';
+import { MilestoneCelebration } from '../../src/components/MilestoneCelebration';
 import { colors, spacing, typography } from '../../src/theme';
 
 export default function LessonPlayerScreen() {
@@ -19,6 +22,7 @@ export default function LessonPlayerScreen() {
   const { data: streak } = useStreak(userId);
   const { data: xp } = useXp(userId);
   const complete = useCompleteLesson();
+  const [milestone, setMilestone] = useState<Milestone | null>(null);
 
   const merged = lessons.find((l) => l.id === id);
   const raw = rawLessons?.find((l) => l.id === id);
@@ -57,7 +61,17 @@ export default function LessonPlayerScreen() {
         totalXp: xp?.total_xp ?? null,
         trackLessons: rawLessons,
       },
-      { onSuccess: () => router.back() }
+      {
+        onSuccess: (data) => {
+          // Celebrate if this completion hit a milestone; otherwise go back.
+          const hit = milestoneForStreak(data.nextStreak.current_streak);
+          if (hit) {
+            setMilestone(hit);
+          } else {
+            router.back();
+          }
+        },
+      }
     );
   };
 
@@ -97,6 +111,14 @@ export default function LessonPlayerScreen() {
           />
         </View>
       </View>
+
+      <MilestoneCelebration
+        milestone={milestone}
+        onDismiss={() => {
+          setMilestone(null);
+          router.back();
+        }}
+      />
     </>
   );
 }

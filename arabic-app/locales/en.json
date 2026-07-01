@@ -45,7 +45,18 @@
     "title": "My Profile",
     "streak": "Day Streak",
     "xp": "XP Points",
-    "logout": "Log Out"
+    "logout": "Log Out",
+    "reminderTitle": "Daily reminder",
+    "reminderEnabled": "Enable reminder",
+    "reminderTime": "Reminder time",
+    "reminderDenied": "Notifications not allowed. You can enable them in system settings."
+  },
+  "gamify": {
+    "level": "Level {{level}}",
+    "xpOf": "{{current}} / {{next}} XP",
+    "celebrate": "Awesome!",
+    "nextMilestone": "{{count}} days to your next milestone",
+    "longest": "Longest streak: {{count}}"
   },
   "debug": {
     "testCrash": "Test Crash Report"

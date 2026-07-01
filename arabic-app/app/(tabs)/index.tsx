@@ -5,6 +5,8 @@ import { useAuth } from '../../src/lib/AuthProvider';
 import { useTrackData } from '../../src/hooks/useTrackData';
 import { useStreak } from '../../src/hooks/useStreakXp';
 import { selectTodaysLesson } from '../../src/lib/lessonProgress';
+import { isStreakActive, toDayString } from '../../src/lib/streak';
+import { StreakBadge } from '../../src/components/StreakBadge';
 import { colors, spacing, typography, radius, shadows } from '../../src/theme';
 
 export default function TodayScreen() {
@@ -38,10 +40,15 @@ export default function TodayScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.greeting}>{t('today.greeting')}</Text>
-      {streak && streak.current_streak > 0 && (
-        <Text style={styles.streak}>🔥 {streak.current_streak}</Text>
-      )}
+      <View style={styles.topRow}>
+        <Text style={styles.greeting}>{t('today.greeting')}</Text>
+        {streak && streak.current_streak > 0 && (
+          <StreakBadge
+            count={streak.current_streak}
+            active={isStreakActive(streak, toDayString(new Date()))}
+          />
+        )}
+      </View>
       <Text style={styles.title}>{t('today.title')}</Text>
 
       {todaysLesson ? (
@@ -89,19 +96,17 @@ const styles = StyleSheet.create({
     color: colors.error,
     textAlign: 'center',
   },
+  topRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
   greeting: {
     fontFamily: typography.fontFamily.arabic,
     fontSize: typography.size.md,
     color: colors.textSecondary,
     textAlign: 'right',
-    marginBottom: spacing.xs,
-  },
-  streak: {
-    fontFamily: typography.fontFamily.arabicBold,
-    fontSize: typography.size.lg,
-    color: colors.streak,
-    textAlign: 'right',
-    marginBottom: spacing.xs,
   },
   title: {
     fontFamily: typography.fontFamily.arabicBold,

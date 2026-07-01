@@ -45,7 +45,18 @@
     "title": "ملفي",
     "streak": "أيام متتالية",
     "xp": "نقاط الخبرة",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "reminderTitle": "التذكير اليومي",
+    "reminderEnabled": "تفعيل التذكير",
+    "reminderTime": "وقت التذكير",
+    "reminderDenied": "لم يُسمح بالإشعارات. يمكنك تفعيلها من إعدادات النظام."
+  },
+  "gamify": {
+    "level": "المستوى {{level}}",
+    "xpOf": "{{current}} / {{next}} نقطة",
+    "celebrate": "رائع!",
+    "nextMilestone": "باقٍ {{count}} أيام للإنجاز التالي",
+    "longest": "أطول سلسلة: {{count}}"
   },
   "debug": {
     "testCrash": "اختبار تقرير الأعطال"
