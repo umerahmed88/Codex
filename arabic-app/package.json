@@ -1,0 +1,47 @@
+{
+  "name": "arabic-app",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@sentry/react-native": "^8.16.0",
+    "@tanstack/react-query": "^5.101.2",
+    "expo": "~57.0.0",
+    "expo-font": "^57.0.0",
+    "expo-router": "^57.0.2",
+    "expo-splash-screen": "^57.0.1",
+    "expo-status-bar": "~57.0.0",
+    "i18next": "^26.3.4",
+    "react": "19.2.3",
+    "react-i18next": "^17.0.8",
+    "react-native": "0.86.0",
+    "react-native-safe-area-context": "^5.8.0",
+    "react-native-screens": "^4.25.2",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@react-native/jest-preset": "^0.86.0",
+    "@types/jest": "^30.0.0",
+    "@types/react": "~19.2.2",
+    "jest": "^30.4.2",
+    "jest-expo": "^57.0.0",
+    "ts-jest": "^29.4.11",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "test": "jest",
+    "typecheck": "tsc --noEmit"
+  },
+  "jest": {
+    "preset": "ts-jest/presets/default",
+    "testEnvironment": "node",
+    "testMatch": ["<rootDir>/src/__tests__/**/*.test.ts"],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    }
+  },
+  "private": true
+}

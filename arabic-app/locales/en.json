@@ -1,0 +1,38 @@
+{
+  "tabs": {
+    "today": "Today",
+    "learn": "Learn",
+    "coach": "Coach",
+    "profile": "Profile"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "subtitle": "An unexpected error occurred.",
+    "retry": "Try Again"
+  },
+  "today": {
+    "title": "Today's Lesson",
+    "greeting": "Welcome back",
+    "start": "Start Lesson"
+  },
+  "learn": {
+    "title": "Your Lessons",
+    "locked": "Locked",
+    "available": "Available",
+    "completed": "Completed"
+  },
+  "coach": {
+    "title": "AI Coach",
+    "placeholder": "Ask your coach...",
+    "send": "Send"
+  },
+  "profile": {
+    "title": "My Profile",
+    "streak": "Day Streak",
+    "xp": "XP Points",
+    "logout": "Log Out"
+  },
+  "debug": {
+    "testCrash": "Test Crash Report"
+  }
+}
