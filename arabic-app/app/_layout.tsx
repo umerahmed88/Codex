@@ -2,11 +2,12 @@ import '../src/lib/i18n'; // must be first
 import { initSentry } from '../src/lib/sentry';
 import { useEffect } from 'react';
 import { I18nManager } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
+import { AuthProvider, useAuth } from '../src/lib/AuthProvider';
 import { StatusBar } from 'expo-status-bar';
 
 // Force RTL globally before any layout is computed
@@ -26,6 +27,35 @@ const queryClient = new QueryClient({
   },
 });
 
+// The "gate": redirects between the auth screens and the main app based on
+// whether a session exists. This is what makes login actually protect the app.
+function AuthGate() {
+  const { session, isLoading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoading) return; // wait until we know the session state
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (!session && !inAuthGroup) {
+      // Not logged in and trying to view the app → send to login.
+      router.replace('/(auth)/login');
+    } else if (session && inAuthGroup) {
+      // Logged in but sitting on an auth screen → send into the app.
+      router.replace('/(tabs)');
+    }
+  }, [session, isLoading, segments, router]);
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(tabs)" />
+    </Stack>
+  );
+}
+
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Cairo: require('../assets/fonts/Cairo-Regular.ttf'),
@@ -44,8 +74,10 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <StatusBar style="light" />
-        <Stack screenOptions={{ headerShown: false }} />
+        <AuthProvider>
+          <StatusBar style="light" />
+          <AuthGate />
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

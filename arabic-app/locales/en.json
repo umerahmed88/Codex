@@ -13,13 +13,28 @@
   "today": {
     "title": "Today's Lesson",
     "greeting": "Welcome back",
-    "start": "Start Lesson"
+    "start": "Start Lesson",
+    "minutes": "{{count}} min",
+    "allDone": "Well done! You've finished all available lessons for today.",
+    "tomorrowPreview": "Tomorrow's lesson",
+    "loading": "Loading...",
+    "errorLoading": "Could not load your lesson. Try again."
+  },
+  "lesson": {
+    "markComplete": "Mark Complete",
+    "completed": "Completed ✓",
+    "xpEarned": "+{{xp}} XP",
+    "completing": "Saving...",
+    "savedOffline": "Your progress will save when you're back online."
   },
   "learn": {
     "title": "Your Lessons",
     "locked": "Locked",
     "available": "Available",
-    "completed": "Completed"
+    "completed": "Completed",
+    "empty": "No lessons yet.",
+    "loading": "Loading...",
+    "error": "Could not load lessons."
   },
   "coach": {
     "title": "AI Coach",
@@ -30,9 +45,40 @@
     "title": "My Profile",
     "streak": "Day Streak",
     "xp": "XP Points",
-    "logout": "Log Out"
+    "logout": "Log Out",
+    "reminderTitle": "Daily reminder",
+    "reminderEnabled": "Enable reminder",
+    "reminderTime": "Reminder time",
+    "reminderDenied": "Notifications not allowed. You can enable them in system settings."
+  },
+  "gamify": {
+    "level": "Level {{level}}",
+    "xpOf": "{{current}} / {{next}} XP",
+    "celebrate": "Awesome!",
+    "nextMilestone": "{{count}} days to your next milestone",
+    "longest": "Longest streak: {{count}}"
   },
   "debug": {
     "testCrash": "Test Crash Report"
+  },
+  "auth": {
+    "loginTitle": "Welcome back",
+    "signupTitle": "Create your account",
+    "email": "Email",
+    "password": "Password",
+    "displayName": "Name",
+    "loginButton": "Log In",
+    "signupButton": "Sign Up",
+    "toSignup": "No account? Create one",
+    "toLogin": "Have an account? Log in",
+    "forgotPassword": "Forgot password?",
+    "resetTitle": "Reset password",
+    "resetButton": "Send reset link",
+    "resetSent": "A reset link has been sent to your email.",
+    "appleSignIn": "Continue with Apple",
+    "googleSignIn": "Continue with Google",
+    "logout": "Log Out",
+    "errorGeneric": "Could not complete that. Check your details and try again.",
+    "signupSuccess": "Account created! You can now log in."
   }
 }

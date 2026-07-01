@@ -13,13 +13,28 @@
   "today": {
     "title": "درس اليوم",
     "greeting": "أهلاً بك",
-    "start": "ابدأ الدرس"
+    "start": "ابدأ الدرس",
+    "minutes": "{{count}} دقائق",
+    "allDone": "أحسنت! أكملت كل الدروس المتاحة اليوم.",
+    "tomorrowPreview": "درس الغد",
+    "loading": "جارٍ التحميل...",
+    "errorLoading": "تعذّر تحميل الدرس. حاول مرة أخرى."
+  },
+  "lesson": {
+    "markComplete": "إكمال الدرس",
+    "completed": "تم الإكمال ✓",
+    "xpEarned": "+{{xp}} نقطة",
+    "completing": "جارٍ الحفظ...",
+    "savedOffline": "سيُحفظ تقدّمك عند عودة الاتصال."
   },
   "learn": {
     "title": "دروسك",
     "locked": "مقفل",
     "available": "متاح",
-    "completed": "مكتمل"
+    "completed": "مكتمل",
+    "empty": "لا توجد دروس بعد.",
+    "loading": "جارٍ التحميل...",
+    "error": "تعذّر تحميل الدروس."
   },
   "coach": {
     "title": "المدرب الذكي",
@@ -30,9 +45,40 @@
     "title": "ملفي",
     "streak": "أيام متتالية",
     "xp": "نقاط الخبرة",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "reminderTitle": "التذكير اليومي",
+    "reminderEnabled": "تفعيل التذكير",
+    "reminderTime": "وقت التذكير",
+    "reminderDenied": "لم يُسمح بالإشعارات. يمكنك تفعيلها من إعدادات النظام."
+  },
+  "gamify": {
+    "level": "المستوى {{level}}",
+    "xpOf": "{{current}} / {{next}} نقطة",
+    "celebrate": "رائع!",
+    "nextMilestone": "باقٍ {{count}} أيام للإنجاز التالي",
+    "longest": "أطول سلسلة: {{count}}"
   },
   "debug": {
     "testCrash": "اختبار تقرير الأعطال"
+  },
+  "auth": {
+    "loginTitle": "مرحباً بعودتك",
+    "signupTitle": "أنشئ حسابك",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "displayName": "الاسم",
+    "loginButton": "تسجيل الدخول",
+    "signupButton": "إنشاء حساب",
+    "toSignup": "ليس لديك حساب؟ أنشئ واحداً",
+    "toLogin": "لديك حساب؟ سجّل الدخول",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "resetTitle": "إعادة تعيين كلمة المرور",
+    "resetButton": "إرسال رابط الإعادة",
+    "resetSent": "تم إرسال رابط إعادة التعيين إلى بريدك.",
+    "appleSignIn": "المتابعة عبر Apple",
+    "googleSignIn": "المتابعة عبر Google",
+    "logout": "تسجيل الخروج",
+    "errorGeneric": "تعذّر إتمام العملية. تحقّق من بياناتك وحاول مجدداً.",
+    "signupSuccess": "تم إنشاء الحساب! يمكنك الآن تسجيل الدخول."
   }
 }
