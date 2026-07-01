@@ -55,7 +55,12 @@
     "reminderTitle": "التذكير اليومي",
     "reminderEnabled": "تفعيل التذكير",
     "reminderTime": "وقت التذكير",
-    "reminderDenied": "لم يُسمح بالإشعارات. يمكنك تفعيلها من إعدادات النظام."
+    "reminderDenied": "لم يُسمح بالإشعارات. يمكنك تفعيلها من إعدادات النظام.",
+    "manageSubscription": "إدارة الاشتراك",
+    "upgrade": "الترقية إلى بريميوم",
+    "privacyPolicy": "سياسة الخصوصية",
+    "terms": "شروط الاستخدام",
+    "subscribed": "مشترك ✓"
   },
   "gamify": {
     "level": "المستوى {{level}}",
@@ -86,6 +91,27 @@
   },
   "debug": {
     "testCrash": "اختبار تقرير الأعطال"
+  },
+  "onboarding": {
+    "slide1Title": "طوّر نفسك كل يوم",
+    "slide1Body": "دروس يومية قصيرة في التواصل والكاريزما، مصمّمة لك باللغة العربية.",
+    "slide2Title": "ما الذي تريد تطويره؟",
+    "slide2Body": "اختر اهتمامك لنخصّص رحلتك.",
+    "slide3Title": "لا تفوّت درساً",
+    "slide3Body": "فعّل التذكير اليومي لتبني عادة تدوم.",
+    "interestCommunication": "التواصل الفعّال",
+    "interestConfidence": "الثقة بالنفس",
+    "interestLeadership": "القيادة",
+    "enableReminder": "تفعيل التذكير اليومي",
+    "skip": "تخطّي",
+    "next": "التالي",
+    "start": "لنبدأ"
+  },
+  "common": {
+    "offline": "لا يوجد اتصال بالإنترنت",
+    "offlineHint": "تحقّق من اتصالك وحاول مرة أخرى.",
+    "loading": "جارٍ التحميل...",
+    "retry": "إعادة المحاولة"
   },
   "auth": {
     "loginTitle": "مرحباً بعودتك",

@@ -1,7 +1,8 @@
 import '../src/lib/i18n'; // must be first
 import { initSentry } from '../src/lib/sentry';
 import { useEffect } from 'react';
-import { I18nManager } from 'react-native';
+import { I18nManager, View } from 'react-native';
+import { OfflineBanner } from '../src/components/OfflineBanner';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -9,6 +10,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { AuthProvider, useAuth } from '../src/lib/AuthProvider';
 import { SubscriptionProvider } from '../src/lib/SubscriptionProvider';
+import { useOnboarding } from '../src/hooks/useOnboarding';
 import { StatusBar } from 'expo-status-bar';
 
 // Force RTL globally before any layout is computed
@@ -32,28 +34,37 @@ const queryClient = new QueryClient({
 // whether a session exists. This is what makes login actually protect the app.
 function AuthGate() {
   const { session, isLoading } = useAuth();
+  const { isComplete: onboarded, isLoading: onboardingLoading } = useOnboarding();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return; // wait until we know the session state
+    if (isLoading || onboardingLoading) return; // wait until both states are known
 
+    const inOnboarding = segments[0] === '(onboarding)';
     const inAuthGroup = segments[0] === '(auth)';
 
-    if (!session && !inAuthGroup) {
-      // Not logged in and trying to view the app → send to login.
+    if (!onboarded && !inOnboarding) {
+      // First run on this device → show onboarding before anything else.
+      router.replace('/(onboarding)');
+    } else if (onboarded && !session && !inAuthGroup) {
+      // Onboarded but not logged in → send to login.
       router.replace('/(auth)/login');
-    } else if (session && inAuthGroup) {
-      // Logged in but sitting on an auth screen → send into the app.
+    } else if (onboarded && session && (inAuthGroup || inOnboarding)) {
+      // Logged in but sitting on auth/onboarding → send into the app.
       router.replace('/(tabs)');
     }
-  }, [session, isLoading, segments, router]);
+  }, [session, isLoading, onboarded, onboardingLoading, segments, router]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <View style={{ flex: 1 }}>
+      <OfflineBanner />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(onboarding)" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </View>
   );
 }
 

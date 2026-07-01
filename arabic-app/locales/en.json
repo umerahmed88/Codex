@@ -55,7 +55,12 @@
     "reminderTitle": "Daily reminder",
     "reminderEnabled": "Enable reminder",
     "reminderTime": "Reminder time",
-    "reminderDenied": "Notifications not allowed. You can enable them in system settings."
+    "reminderDenied": "Notifications not allowed. You can enable them in system settings.",
+    "manageSubscription": "Manage subscription",
+    "upgrade": "Upgrade to Premium",
+    "privacyPolicy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "subscribed": "Subscribed ✓"
   },
   "gamify": {
     "level": "Level {{level}}",
@@ -86,6 +91,27 @@
   },
   "debug": {
     "testCrash": "Test Crash Report"
+  },
+  "onboarding": {
+    "slide1Title": "Grow every day",
+    "slide1Body": "Short daily lessons in communication and charisma, built for you in Arabic.",
+    "slide2Title": "What do you want to improve?",
+    "slide2Body": "Pick an interest so we can tailor your journey.",
+    "slide3Title": "Never miss a lesson",
+    "slide3Body": "Turn on a daily reminder to build a habit that lasts.",
+    "interestCommunication": "Communication",
+    "interestConfidence": "Confidence",
+    "interestLeadership": "Leadership",
+    "enableReminder": "Enable daily reminder",
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Let's start"
+  },
+  "common": {
+    "offline": "No internet connection",
+    "offlineHint": "Check your connection and try again.",
+    "loading": "Loading...",
+    "retry": "Try Again"
   },
   "auth": {
     "loginTitle": "Welcome back",
