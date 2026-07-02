@@ -1,71 +1,51 @@
 // ============================================================================
-// The completion write sequence, extracted so BOTH the live mutation
-// (useCompleteLesson) and the offline flush (useOfflineSync) run identical
-// logic. Single source of truth for "what completing a lesson does".
+// Lesson completion — now a single server-side RPC (Phase 11).
+//
+// The client used to compute XP/streaks and write them directly; a tampered
+// client could write any values, and the read-then-write XP increment raced.
+// complete_lesson() (supabase/migrations/0005) now does the whole sequence
+// atomically on the server, with the same streak rules as lib/streak.ts.
+// This wrapper keeps the old function's shape so useCompleteLesson and the
+// offline replay in useOfflineSync stay unchanged.
 // ============================================================================
 import { supabase } from './supabase';
-import { advanceStreak, type StreakState } from './streak';
-import { XP_PER_LESSON } from './xp';
+import type { StreakState } from './streak';
 import type { Lesson } from '../types/database';
 
 export interface CompleteWritesArgs {
-  userId: string;
+  userId: string; // derived server-side from the session; kept for call-site compatibility
   lesson: Lesson;
-  trackLessons: Lesson[];
+  trackLessons: Lesson[]; // unlock is now resolved server-side; kept for compatibility
   // The calendar day the completion should credit (captured at action time so a
   // delayed offline sync still credits the correct day).
   completedDay: string;
 }
 
-// Runs the four completion writes. Throws on the first failure so callers can
-// enqueue for retry. Reads current XP/streak fresh from the server to stay
-// correct even when replaying a queued action later.
+interface CompleteLessonResult {
+  already_completed: boolean;
+  total_xp: number;
+  current_streak: number;
+  longest_streak: number;
+  last_active_date: string | null;
+}
+
 export async function completeLessonWrites({
-  userId,
   lesson,
-  trackLessons,
   completedDay,
 }: CompleteWritesArgs): Promise<{ nextStreak: StreakState; newXp: number }> {
-  // 1. Mark completed.
-  const { error: progressError } = await supabase.from('lesson_progress').upsert(
-    { user_id: userId, lesson_id: lesson.id, status: 'completed', completed_at: new Date().toISOString() },
-    { onConflict: 'user_id,lesson_id' }
-  );
-  if (progressError) throw progressError;
+  const { data, error } = await supabase.rpc('complete_lesson', {
+    p_lesson_id: lesson.id,
+    p_completed_day: completedDay,
+  });
+  if (error) throw error;
 
-  // 2. Award XP.
-  const { data: xpRow } = await supabase.from('xp').select('total_xp').eq('user_id', userId).maybeSingle();
-  const newXp = (xpRow?.total_xp ?? 0) + XP_PER_LESSON;
-  const { error: xpError } = await supabase.from('xp').update({ total_xp: newXp }).eq('user_id', userId);
-  if (xpError) throw xpError;
-
-  // 3. Advance streak (credit the captured completion day).
-  const { data: streakRow } = await supabase
-    .from('streaks')
-    .select('current_streak, longest_streak, last_active_date')
-    .eq('user_id', userId)
-    .maybeSingle();
-  const current: StreakState = streakRow ?? { current_streak: 0, longest_streak: 0, last_active_date: null };
-  const nextStreak = advanceStreak(current, completedDay);
-  const { error: streakError } = await supabase
-    .from('streaks')
-    .update({
-      current_streak: nextStreak.current_streak,
-      longest_streak: nextStreak.longest_streak,
-      last_active_date: nextStreak.last_active_date,
-    })
-    .eq('user_id', userId);
-  if (streakError) throw streakError;
-
-  // 4. Unlock next lesson.
-  const next = trackLessons.find((l) => l.day_number === lesson.day_number + 1);
-  if (next) {
-    const { error: unlockError } = await supabase.from('lesson_progress').upsert(
-      { user_id: userId, lesson_id: next.id, status: 'available' },
-      { onConflict: 'user_id,lesson_id' }
-    );
-    if (unlockError) throw unlockError;
-  }
-
-  return { nextStreak, newXp };
+  const result = data as unknown as CompleteLessonResult;
+  return {
+    nextStreak: {
+      current_streak: result.current_streak,
+      longest_streak: result.longest_streak,
+      last_active_date: result.last_active_date,
+    },
+    newXp: result.total_xp,
+  };
 }

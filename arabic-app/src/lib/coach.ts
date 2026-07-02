@@ -8,6 +8,22 @@
 
 export const FREE_DAILY_LIMIT = 3;
 
+// Abuse hardening (Phase 11) — enforced server-side in the coach Edge
+// Function and mirrored client-side for instant feedback.
+export const MAX_QUESTION_LENGTH = 500; // chars; bounds per-request LLM cost
+export const PER_MINUTE_LIMIT = 3; // applies to paid users too (burst guard)
+
+// Is this question sendable at all? (Length/emptiness — not rate limits.)
+export function isQuestionValid(question: string): boolean {
+  const trimmed = question.trim();
+  return trimmed.length > 0 && trimmed.length <= MAX_QUESTION_LENGTH;
+}
+
+// Burst guard: has the user hit the per-minute ceiling?
+export function isRateLimitedPerMinute(questionsInLastMinute: number): boolean {
+  return questionsInLastMinute >= PER_MINUTE_LIMIT;
+}
+
 export interface Citation {
   lesson_id: string;
   title: string;

@@ -14,6 +14,8 @@ import Anthropic from 'npm:@anthropic-ai/sdk@0.68.0';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const FREE_DAILY_LIMIT = 3; // free users; paid users are unlimited
+const MAX_QUESTION_LENGTH = 500; // mirror of src/lib/coach.ts
+const PER_MINUTE_LIMIT = 3; // burst guard, applies to paid users too
 const MODEL = 'claude-opus-4-8';
 
 const corsHeaders = {
@@ -54,6 +56,22 @@ Deno.serve(async (req: Request) => {
     const { question } = await req.json();
     if (!question || typeof question !== 'string' || question.trim().length === 0) {
       return json({ error: 'empty_question' }, 400);
+    }
+    // Length cap (mirrors MAX_QUESTION_LENGTH in src/lib/coach.ts) — bounds
+    // per-request LLM cost regardless of tier.
+    if (question.trim().length > MAX_QUESTION_LENGTH) {
+      return json({ error: 'question_too_long', limit: MAX_QUESTION_LENGTH }, 400);
+    }
+
+    // --- Burst guard: max PER_MINUTE_LIMIT questions/min, paid users too. -----
+    const oneMinuteAgo = new Date(Date.now() - 60_000);
+    const { count: lastMinuteCount } = await supabase
+      .from('coach_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gte('created_at', oneMinuteAgo.toISOString());
+    if ((lastMinuteCount ?? 0) >= PER_MINUTE_LIMIT) {
+      return json({ error: 'rate_limited_burst', limit: PER_MINUTE_LIMIT }, 429);
     }
 
     // --- Rate limit: free users get FREE_DAILY_LIMIT questions per day. -------

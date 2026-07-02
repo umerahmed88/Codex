@@ -16,7 +16,7 @@ import { useAuth } from '../../src/lib/AuthProvider';
 import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useAskCoach, useCoachQuestionsToday } from '../../src/hooks/useCoach';
 import { useFeatureFlag } from '../../src/hooks/useAppConfig';
-import { remainingQuestions, type CoachTurn } from '../../src/lib/coach';
+import { remainingQuestions, isQuestionValid, MAX_QUESTION_LENGTH, type CoachTurn } from '../../src/lib/coach';
 import { track } from '../../src/lib/analytics';
 import { colors, spacing, typography, radius } from '../../src/theme';
 
@@ -39,7 +39,7 @@ export default function CoachScreen() {
 
   const handleSend = () => {
     const question = input.trim();
-    if (!question || ask.isPending) return;
+    if (!isQuestionValid(question) || ask.isPending) return;
     setError(null);
     setInput('');
     setTurns((prev) => [...prev, { role: 'user', text: question }]);
@@ -113,6 +113,7 @@ export default function CoachScreen() {
           style={styles.input}
           value={input}
           onChangeText={setInput}
+          maxLength={MAX_QUESTION_LENGTH}
           placeholder={t('coach.placeholder')}
           placeholderTextColor={colors.textMuted}
           textAlign="right"

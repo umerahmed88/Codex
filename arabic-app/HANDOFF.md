@@ -29,7 +29,18 @@ Sentry · Claude API (`claude-opus-4-8`) via a Supabase Edge Function.
 | 9 | CI/CD (GitHub Actions) + EAS build/update + store guide | ✅ |
 | 10 | Launch ops: remote config, kill-switches, staged rollout, force-update, monitoring, in-app feedback | ✅ |
 
-**Tests:** `npm test` → 78 passing. `npx tsc --noEmit` → clean.
+**Improvement roadmap (Phases 11–16, from the post-launch audit):**
+
+| Phase | What | Status |
+|-------|------|--------|
+| 11 | Server authority: complete_lesson RPC + RLS lockdown, RevenueCat webhook, coach abuse guards | ✅ |
+| 12 | Quality: ESLint+CI, persisted locale, component tests | ⏳ |
+| 13 | Coach v2: streaming, conversation memory, pgvector (optional) | ⏳ |
+| 14 | Content pipeline: import script, template, second track + multi-track UI | ⏳ |
+| 15 | Growth: PostHog, remote push, Apple/Google sign-in | ⏳ |
+| 16 | Ops: offline lesson cache, staging env, a11y/numerals, data ops | ⏳ |
+
+**Tests:** `npm test` → 83 passing. `npx tsc --noEmit` → clean.
 
 ## Repo layout
 
@@ -72,14 +83,17 @@ npx expo start --tunnel        # scan QR with Expo Go
 
 These need YOUR accounts and can't be done from code:
 
-- [ ] **Supabase project** — create it, then run `supabase/migrations/0001`,
-      `0002`, `0003`, `0004`, and `seed.sql` in the SQL Editor.
+- [ ] **Supabase project** — create it, then run `supabase/migrations/0001`
+      through `0005`, and `seed.sql`, in order, in the SQL Editor.
       (A Supabase platform OUTAGE was blocking the SQL Editor as of last session
       — check https://status.supabase.com; it's temporary, not our bug.)
 - [ ] **`.env.local`** — set `EXPO_PUBLIC_SUPABASE_URL` + `_ANON_KEY`
       (the "publishable" `sb_...` key), from Supabase → Settings → API.
 - [ ] **Coach Edge Function** — `supabase functions deploy coach` and
       `supabase secrets set ANTHROPIC_API_KEY=sk-ant-...` (see docs/phase-5-setup.md).
+- [ ] **RevenueCat webhook** — `supabase functions deploy revenuecat-webhook`,
+      set `REVENUECAT_WEBHOOK_SECRET`, point RevenueCat's webhook at it
+      (see docs/phase-11-server-authority.md).
 - [ ] **RevenueCat + store IAP products** — needed for the paywall
       (see docs/phase-6-setup.md). Requires Apple Developer ($99) + Play ($25).
 - [ ] **`EXPO_PUBLIC_REVENUECAT_IOS_KEY` / `_ANDROID_KEY`** in `.env.local`.
