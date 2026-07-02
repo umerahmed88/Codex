@@ -15,7 +15,9 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../src/lib/AuthProvider';
 import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useAskCoach, useCoachQuestionsToday } from '../../src/hooks/useCoach';
+import { useFeatureFlag } from '../../src/hooks/useAppConfig';
 import { remainingQuestions, type CoachTurn } from '../../src/lib/coach';
+import { track } from '../../src/lib/analytics';
 import { colors, spacing, typography, radius } from '../../src/theme';
 
 export default function CoachScreen() {
@@ -30,6 +32,7 @@ export default function CoachScreen() {
   const scrollRef = useRef<ScrollView>(null);
 
   const { isSubscribed } = useSubscription();
+  const coachEnabled = useFeatureFlag('coach');
   const ask = useAskCoach();
   const { data: askedToday = 0, refetch } = useCoachQuestionsToday(userId);
   const left = remainingQuestions(askedToday, isSubscribed);
@@ -40,6 +43,7 @@ export default function CoachScreen() {
     setError(null);
     setInput('');
     setTurns((prev) => [...prev, { role: 'user', text: question }]);
+    track('coach_question_asked');
 
     ask.mutate(question, {
       onSuccess: (data) => {
@@ -52,6 +56,16 @@ export default function CoachScreen() {
       },
     });
   };
+
+  // Kill-switch: if the Coach is remotely disabled (e.g. an LLM cost spike or
+  // an outage), show an "unavailable" state instead of a broken chat.
+  if (!coachEnabled) {
+    return (
+      <View style={[styles.container, styles.disabledWrap]}>
+        <Text style={styles.disabled}>{t('coach.disabled')}</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -118,6 +132,14 @@ export default function CoachScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  disabledWrap: { alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+  disabled: {
+    fontFamily: typography.fontFamily.arabic,
+    fontSize: typography.size.md,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: typography.size.md * typography.lineHeight.normal,
+  },
   messages: { padding: spacing.lg, gap: spacing.md },
   intro: {
     fontFamily: typography.fontFamily.arabic,

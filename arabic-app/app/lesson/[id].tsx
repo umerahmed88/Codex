@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../src/lib/AuthProvider';
 import { useSubscription } from '../../src/lib/SubscriptionProvider';
+import { useFeatureFlag } from '../../src/hooks/useAppConfig';
 import { useTrackData } from '../../src/hooks/useTrackData';
 import { useStreak, useXp } from '../../src/hooks/useStreakXp';
 import { useCompleteLesson } from '../../src/hooks/useCompleteLesson';
@@ -21,6 +22,7 @@ export default function LessonPlayerScreen() {
   const userId = session?.user.id;
 
   const { isSubscribed } = useSubscription();
+  const paywallEnabled = useFeatureFlag('paywall');
   const { lessons, rawLessons, isLoading, isError } = useTrackData(userId);
   const { data: streak } = useStreak(userId);
   const { data: xp } = useXp(userId);
@@ -33,10 +35,10 @@ export default function LessonPlayerScreen() {
   // Deep-link guard: if this lesson is premium and the user isn't subscribed,
   // send them to the paywall instead of showing the content.
   useEffect(() => {
-    if (merged && shouldShowPaywall(merged, isSubscribed)) {
+    if (merged && paywallEnabled && shouldShowPaywall(merged, isSubscribed)) {
       router.replace('/paywall');
     }
-  }, [merged, isSubscribed, router]);
+  }, [merged, isSubscribed, paywallEnabled, router]);
 
   if (isLoading) {
     return (

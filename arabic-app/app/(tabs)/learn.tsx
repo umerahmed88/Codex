@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/lib/AuthProvider';
 import { useSubscription } from '../../src/lib/SubscriptionProvider';
+import { useFeatureFlag } from '../../src/hooks/useAppConfig';
 import { useTrackData } from '../../src/hooks/useTrackData';
 import { shouldShowPaywall } from '../../src/lib/entitlements';
 import type { LessonWithProgress } from '../../src/types/database';
@@ -13,10 +14,11 @@ export default function LearnScreen() {
   const router = useRouter();
   const { session } = useAuth();
   const { isSubscribed } = useSubscription();
+  const paywallEnabled = useFeatureFlag('paywall');
   const { lessons, isLoading, isError } = useTrackData(session?.user.id);
 
   const openLesson = (lesson: LessonWithProgress) => {
-    if (shouldShowPaywall(lesson, isSubscribed)) {
+    if (paywallEnabled && shouldShowPaywall(lesson, isSubscribed)) {
       router.push('/paywall');
     } else {
       router.push(`/lesson/${lesson.id}`);

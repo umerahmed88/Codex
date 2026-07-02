@@ -14,7 +14,7 @@ gamification loop, and a subscription paywall. RTL-first, Arabic primary.
 Supabase (Postgres + Auth) · React Query · Zustand · RevenueCat (IAP) ·
 Sentry · Claude API (`claude-opus-4-8`) via a Supabase Edge Function.
 
-## Build status — Phases 1–9 DONE, Phase 10 remaining
+## Build status — Phases 1–10 DONE 🎉
 
 | Phase | What | Status |
 |-------|------|--------|
@@ -27,9 +27,9 @@ Sentry · Claude API (`claude-opus-4-8`) via a Supabase Edge Function.
 | 7 | Onboarding & polish (offline banner, legal links, a11y) | ✅ |
 | 8 | Test suite (53 tests) + reliability hardening + Maestro E2E | ✅ |
 | 9 | CI/CD (GitHub Actions) + EAS build/update + store guide | ✅ |
-| 10 | Launch ops: staged rollout, monitoring, kill-switches, feedback | ⏳ TODO |
+| 10 | Launch ops: remote config, kill-switches, staged rollout, force-update, monitoring, in-app feedback | ✅ |
 
-**Tests:** `npm test` → 53 passing. `npx tsc --noEmit` → clean.
+**Tests:** `npm test` → 78 passing. `npx tsc --noEmit` → clean.
 
 ## Repo layout
 
@@ -50,12 +50,13 @@ arabic-app/
     types/database.ts   # TS types mirroring the SQL schema
     __tests__/          # 9 test files (all pure logic)
   supabase/
-    migrations/         # 0001 schema, 0002 RLS, 0003 coach retrieval
+    migrations/         # 0001 schema, 0002 RLS, 0003 coach retrieval,
+                        # 0004 launch ops (app_config + user_feedback)
     seed.sql            # 1 track + 7 lessons
     functions/coach/    # Deno Edge Function (holds the Claude key)
   locales/ar.json, en.json
   .maestro/critical-path.yaml   # E2E flow
-  docs/                 # phase-2 / phase-5 / phase-6 / phase-8 / phase-9 setup
+  docs/                 # phase-2/-5/-6/-8/-9 setup + phase-10 launch ops
 ```
 
 ## How to run (in a Codespace — see docs/running-in-codespaces.md)
@@ -72,7 +73,7 @@ npx expo start --tunnel        # scan QR with Expo Go
 These need YOUR accounts and can't be done from code:
 
 - [ ] **Supabase project** — create it, then run `supabase/migrations/0001`,
-      `0002`, `0003`, and `seed.sql` in the SQL Editor.
+      `0002`, `0003`, `0004`, and `seed.sql` in the SQL Editor.
       (A Supabase platform OUTAGE was blocking the SQL Editor as of last session
       — check https://status.supabase.com; it's temporary, not our bug.)
 - [ ] **`.env.local`** — set `EXPO_PUBLIC_SUPABASE_URL` + `_ANON_KEY`
@@ -87,6 +88,9 @@ These need YOUR accounts and can't be done from code:
       `app/(tabs)/profile.tsx` before store submission.
 - [ ] **Sentry** — set org/project in `app.json` and the Sentry auth token as
       an EAS secret for source-map upload.
+- [ ] **Store URLs for force-update** — replace the placeholder App Store /
+      Play URLs in `src/components/UpdateGate.tsx` before submission.
+      (See `docs/phase-10-launch-ops.md` for the full launch-ops runbook.)
 
 ## Git / workflow rules
 
@@ -100,5 +104,6 @@ These need YOUR accounts and can't be done from code:
 
 ## To continue in a fresh session
 
-Say: *"Read arabic-app/HANDOFF.md and continue with Phase 10"* (or whatever's
-next). Everything needed to resume is in this file + the `docs/` folder.
+All 10 build phases are complete. What remains is the **manual setup** above
+(your Supabase / RevenueCat / store accounts) to actually run and ship the app.
+Everything needed to resume is in this file + the `docs/` folder.

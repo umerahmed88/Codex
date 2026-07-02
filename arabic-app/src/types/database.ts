@@ -71,6 +71,26 @@ export interface CoachMessage {
   created_at: string;
 }
 
+// Remote launch-ops config (Phase 10). One row (id = 1); `flags` mirrors
+// AppConfig['flags'] in src/lib/featureFlags.ts.
+export interface AppConfigRow {
+  id: number;
+  flags: Record<string, { enabled: boolean; rolloutPercentage?: number }>;
+  min_supported_version: string;
+  updated_at: string;
+}
+
+// An in-app feedback submission (Phase 10).
+export interface UserFeedback {
+  id: string;
+  user_id: string;
+  category: 'bug' | 'idea' | 'content' | 'other';
+  message: string;
+  app_version: string;
+  platform: string;
+  created_at: string;
+}
+
 // A lesson combined with the current user's progress on it — the shape the
 // Learn/Today screens actually render.
 export interface LessonWithProgress extends Lesson {
