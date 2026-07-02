@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { Modal, View, Text, StyleSheet, Pressable, Animated, Easing } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Modal, Text, StyleSheet, Pressable, Animated, Easing } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { Milestone } from '@/lib/milestones';
 import { colors, spacing, typography, radius, shadows } from '@/theme';
@@ -14,7 +14,9 @@ export function MilestoneCelebration({
   onDismiss: () => void;
 }) {
   const { t } = useTranslation();
-  const scale = useRef(new Animated.Value(0.8)).current;
+  // Lazy state init: the Animated.Value is created exactly once and is never
+  // re-set, so it's stable across renders without touching a ref in render.
+  const [scale] = useState(() => new Animated.Value(0.8));
 
   useEffect(() => {
     if (milestone) {

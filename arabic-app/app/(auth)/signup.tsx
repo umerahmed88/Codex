@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { Link } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { TextField } from '../../src/components/TextField';
 import { Button } from '../../src/components/Button';
@@ -10,7 +10,6 @@ import { colors, spacing, typography } from '../../src/theme';
 export default function SignupScreen() {
   const { t } = useTranslation();
   const { signUp } = useAuth();
-  const router = useRouter();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

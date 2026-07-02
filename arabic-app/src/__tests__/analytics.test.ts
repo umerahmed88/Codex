@@ -1,11 +1,11 @@
 // Sentry pulls in a native module that can't load under the node test env, so
 // we mock it — we only care that track() shapes events and doesn't throw.
+import { buildBreadcrumb, track } from '../lib/analytics';
+import { Sentry } from '../lib/sentry';
+
 jest.mock('../lib/sentry', () => ({
   Sentry: { addBreadcrumb: jest.fn(), captureException: jest.fn() },
 }));
-
-import { buildBreadcrumb, track } from '../lib/analytics';
-import { Sentry } from '../lib/sentry';
 
 describe('buildBreadcrumb', () => {
   it('shapes an event into an analytics breadcrumb', () => {

@@ -34,13 +34,13 @@ Sentry · Claude API (`claude-opus-4-8`) via a Supabase Edge Function.
 | Phase | What | Status |
 |-------|------|--------|
 | 11 | Server authority: complete_lesson RPC + RLS lockdown, RevenueCat webhook, coach abuse guards | ✅ |
-| 12 | Quality: ESLint+CI, persisted locale, component tests | ⏳ |
+| 12 | Quality: ESLint+CI, persisted locale, component tests | ✅ |
 | 13 | Coach v2: streaming, conversation memory, pgvector (optional) | ⏳ |
 | 14 | Content pipeline: import script, template, second track + multi-track UI | ⏳ |
 | 15 | Growth: PostHog, remote push, Apple/Google sign-in | ⏳ |
 | 16 | Ops: offline lesson cache, staging env, a11y/numerals, data ops | ⏳ |
 
-**Tests:** `npm test` → 83 passing. `npx tsc --noEmit` → clean.
+**Tests:** `npm test` → 87 passing (logic + component projects). `npx tsc --noEmit` clean. `npm run lint` clean.
 
 ## Repo layout
 

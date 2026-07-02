@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, Switch, Platform, Linking, ScrollVie
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import i18n from '../../src/lib/i18n';
+import i18n, { setLocale } from '../../src/lib/i18n';
 import { useAuth } from '../../src/lib/AuthProvider';
 import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useStreak, useXp } from '../../src/hooks/useStreakXp';
@@ -47,7 +47,8 @@ export default function ProfileScreen() {
   const active = isStreakActive(streakState, today);
 
   const toggleLocale = () => {
-    i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar');
+    // setLocale persists the choice so it survives app restarts (Phase 12).
+    void setLocale(i18n.language === 'ar' ? 'en' : 'ar');
   };
 
   const onToggleReminder = async (value: boolean) => {

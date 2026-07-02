@@ -52,24 +52,31 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    if (!userId) {
-      setIsSubscribed(false);
-      setIsLoading(false);
-      return;
-    }
+    if (!userId) return; // signed-out values are derived below, not set here
     try {
       configurePurchases(userId);
     } catch {
       // ignore configuration errors (dev client without native module)
     }
+    // Syncing with an external SDK (RevenueCat) is the documented use-case for
+    // effects; refresh() only calls setState after its first await, so there is
+    // no synchronous cascading render — the rule can't see across the await.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
     const unsub = onCustomerInfoUpdate(applyInfo);
     return unsub;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
+  // Signed out ⇒ definitively not subscribed and nothing to load. Deriving
+  // this (instead of setState in the effect) avoids a cascading render and
+  // means stale entitlement state can never leak across a logout.
+  const value: SubscriptionContextValue = userId
+    ? { isSubscribed, isLoading, refresh }
+    : { isSubscribed: false, isLoading: false, refresh };
+
   return (
-    <SubscriptionContext.Provider value={{ isSubscribed, isLoading, refresh }}>
+    <SubscriptionContext.Provider value={value}>
       {children}
     </SubscriptionContext.Provider>
   );
