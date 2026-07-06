@@ -36,11 +36,11 @@ Sentry · Claude API (`claude-opus-4-8`) via a Supabase Edge Function.
 | 11 | Server authority: complete_lesson RPC + RLS lockdown, RevenueCat webhook, coach abuse guards | ✅ |
 | 12 | Quality: ESLint+CI, persisted locale, component tests | ✅ |
 | 13 | Coach v2: streaming, conversation memory, pgvector (optional) | ✅ |
-| 14 | Content pipeline: import script, template, second track + multi-track UI | ⏳ |
+| 14 | Content pipeline: import script, template, second track + multi-track UI | ✅ |
 | 15 | Growth: PostHog, remote push, Apple/Google sign-in | ⏳ |
 | 16 | Ops: offline lesson cache, staging env, a11y/numerals, data ops | ⏳ |
 
-**Tests:** `npm test` → 91 passing (logic + component projects). `npx tsc --noEmit` clean. `npm run lint` clean.
+**Tests:** `npm test` → 105 passing (logic + component projects). `npx tsc --noEmit` clean. `npm run lint` clean.
 
 ## Repo layout
 
@@ -64,9 +64,10 @@ arabic-app/
     migrations/         # 0001 schema, 0002 RLS, 0003 coach retrieval,
                         # 0004 launch ops, 0005 complete_lesson RPC,
                         # 0006 coach embeddings (pgvector)
-    seed.sql            # 1 track + 7 lessons
+    seed.sql            # 2 tracks × 7 lessons (Communication, Confidence)
     functions/          # coach + revenuecat-webhook Edge Functions (Deno)
-  scripts/embed-lessons.ts   # Voyage AI lesson indexer (npx tsx, --dry-run)
+  scripts/              # embed-lessons.ts + import-lessons.ts (npx tsx, --dry-run)
+  content/template.csv  # lesson authoring template (docs/content-pipeline.md)
   locales/ar.json, en.json
   .maestro/critical-path.yaml   # E2E flow
   docs/                 # phase-2/-5/-6/-8/-9 setup + phase-10 launch ops
