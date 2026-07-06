@@ -6,6 +6,8 @@ import {
   FREE_DAILY_LIMIT,
   MAX_QUESTION_LENGTH,
   PER_MINUTE_LIMIT,
+  toChatHistory,
+  HISTORY_TURNS,
 } from '../lib/coach';
 
 describe('canAskCoach', () => {
@@ -61,5 +63,40 @@ describe('remainingQuestions', () => {
 
   it('is Infinity for paid users', () => {
     expect(remainingQuestions(100, true)).toBe(Infinity);
+  });
+});
+
+describe('toChatHistory', () => {
+  const ex = (q: string, a: string | null) => ({ question: q, answer: a });
+
+  it('produces alternating user/assistant messages, oldest first', () => {
+    // Stored newest-first (as queried with order created_at desc)
+    const msgs = toChatHistory([ex('q2', 'a2'), ex('q1', 'a1')]);
+    expect(msgs).toEqual([
+      { role: 'user', content: 'q1' },
+      { role: 'assistant', content: 'a1' },
+      { role: 'user', content: 'q2' },
+      { role: 'assistant', content: 'a2' },
+    ]);
+  });
+
+  it('skips unanswered exchanges', () => {
+    const msgs = toChatHistory([ex('pending', null), ex('q1', 'a1')]);
+    expect(msgs).toHaveLength(2);
+    expect(msgs[0].content).toBe('q1');
+  });
+
+  it('caps at HISTORY_TURNS exchanges (keeping the most recent)', () => {
+    const many = Array.from({ length: HISTORY_TURNS + 4 }, (_, i) =>
+      ex(`q${i}`, `a${i}`)
+    ); // index 0 = newest
+    const msgs = toChatHistory(many);
+    expect(msgs).toHaveLength(HISTORY_TURNS * 2);
+    // Oldest kept exchange is index HISTORY_TURNS-1; newest (q0) must be last.
+    expect(msgs[msgs.length - 2].content).toBe('q0');
+  });
+
+  it('returns empty for no history', () => {
+    expect(toChatHistory([])).toEqual([]);
   });
 });

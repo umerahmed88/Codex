@@ -55,17 +55,58 @@ supabase functions deploy coach
 4. If retrieval finds nothing, the function answers "not covered" **without
    calling Claude at all** — zero chance of hallucination, and no API cost.
 
-## Production upgrade: semantic search with embeddings
+## Coach v2 (Phase 13): streaming, memory, semantic retrieval
 
-Full-text search matches keywords. For semantic matching ("how do I make a good
-first impression?" finding a lesson titled "قوة الانطباع الأول" even without
-shared words), the upgrade is **pgvector embeddings**:
+Phase 13 upgraded the coach. Everything below is **optional at deploy time** —
+each feature degrades gracefully when its prerequisite is missing.
 
-1. `create extension vector;` and add an `embedding vector(1024)` column to
-   `lessons`.
-2. Generate embeddings for each lesson with an embeddings provider (Voyage AI
-   is Anthropic's recommended partner) and store them.
-3. Replace `match_lessons` with a cosine-distance query over the embeddings.
+### Streaming answers
 
-The Edge Function's retrieval step is isolated, so this swap doesn't touch the
-app or the prompt logic. Not required for launch with a small lesson set.
+The function accepts `{ "stream": true }` in the request body and then returns
+the answer as a plain-text stream (tokens appear as they're generated) instead
+of one JSON blob. The citation is sent in response **headers**
+(`X-Citation-Lesson-Id`, `X-Citation-Title` — the Arabic title is URI-encoded
+because headers must be Latin-1), so the client shows the source immediately.
+
+Client side, `src/lib/coachStream.ts` uses `fetch` from `expo/fetch` (which
+supports streaming response bodies, unlike React Native's built-in fetch). The
+Coach screen tries streaming first and **falls back automatically** to the
+original non-streaming request if anything goes wrong — older clients and the
+JSON path keep working unchanged. Nothing to configure.
+
+### Conversation memory
+
+The function now sends the user's last 6 answered exchanges (from
+`coach_messages`, which we were already storing) as prior turns in the Claude
+call, so follow-up questions like "وكيف أطبق ذلك في العمل؟" work. The pure
+history-shaping logic is `toChatHistory` in `src/lib/coach.ts` (unit-tested).
+Nothing to configure.
+
+### Semantic retrieval (optional — needs a Voyage AI key)
+
+Full-text search matches keywords. Semantic search matches **meaning**: "how do
+I make a good first impression?" finds "قوة الانطباع الأول" even with no shared
+words. The pieces:
+
+1. **Run migration** `supabase/migrations/0006_coach_embeddings.sql` — enables
+   the `vector` extension, adds `lessons.embedding vector(1024)`, and creates
+   `match_lessons_semantic()` (cosine distance).
+2. **Get a Voyage AI key** (https://www.voyageai.com — Anthropic's recommended
+   embeddings partner) and set it as a function secret:
+   ```bash
+   supabase secrets set VOYAGE_API_KEY=pa-...
+   ```
+3. **Index the lessons** (embeds every lesson body with `voyage-3`, 1024 dims):
+   ```bash
+   cd arabic-app
+   SUPABASE_URL=https://YOUR_REF.supabase.co \
+   SUPABASE_SERVICE_ROLE_KEY=eyJ... \
+   VOYAGE_API_KEY=pa-... \
+   npx tsx scripts/embed-lessons.ts        # add --dry-run to validate first
+   ```
+   Re-run it whenever lesson content changes.
+
+At question time the function embeds the query and uses
+`match_lessons_semantic`; **if `VOYAGE_API_KEY` isn't set (or the call fails),
+it silently falls back to the FTS `match_lessons`** — retrieval can never take
+the coach down. The grounding design (answer only from excerpts) is unchanged.

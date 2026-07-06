@@ -52,3 +52,29 @@ export function remainingQuestions(questionsAskedToday: number, isPaid: boolean)
   if (isPaid) return Infinity;
   return Math.max(0, FREE_DAILY_LIMIT - questionsAskedToday);
 }
+
+// Conversation memory (Phase 13): how many prior Q&A exchanges the coach sees.
+export const HISTORY_TURNS = 6;
+
+export interface CoachExchange {
+  question: string;
+  answer: string | null;
+}
+
+// Turn stored exchanges (newest-first, as queried) into the alternating
+// user/assistant message list the LLM expects (oldest-first), skipping any
+// unanswered rows and capping at HISTORY_TURNS exchanges. Pure — mirrored in
+// the coach Edge Function; tested here.
+export function toChatHistory(
+  exchanges: CoachExchange[],
+  maxTurns: number = HISTORY_TURNS
+): { role: 'user' | 'assistant'; content: string }[] {
+  return exchanges
+    .filter((e) => e.answer !== null && e.answer !== '')
+    .slice(0, maxTurns)
+    .reverse()
+    .flatMap((e) => [
+      { role: 'user' as const, content: e.question },
+      { role: 'assistant' as const, content: e.answer as string },
+    ]);
+}

@@ -35,12 +35,12 @@ Sentry · Claude API (`claude-opus-4-8`) via a Supabase Edge Function.
 |-------|------|--------|
 | 11 | Server authority: complete_lesson RPC + RLS lockdown, RevenueCat webhook, coach abuse guards | ✅ |
 | 12 | Quality: ESLint+CI, persisted locale, component tests | ✅ |
-| 13 | Coach v2: streaming, conversation memory, pgvector (optional) | ⏳ |
+| 13 | Coach v2: streaming, conversation memory, pgvector (optional) | ✅ |
 | 14 | Content pipeline: import script, template, second track + multi-track UI | ⏳ |
 | 15 | Growth: PostHog, remote push, Apple/Google sign-in | ⏳ |
 | 16 | Ops: offline lesson cache, staging env, a11y/numerals, data ops | ⏳ |
 
-**Tests:** `npm test` → 87 passing (logic + component projects). `npx tsc --noEmit` clean. `npm run lint` clean.
+**Tests:** `npm test` → 91 passing (logic + component projects). `npx tsc --noEmit` clean. `npm run lint` clean.
 
 ## Repo layout
 
@@ -62,9 +62,11 @@ arabic-app/
     __tests__/          # 9 test files (all pure logic)
   supabase/
     migrations/         # 0001 schema, 0002 RLS, 0003 coach retrieval,
-                        # 0004 launch ops (app_config + user_feedback)
+                        # 0004 launch ops, 0005 complete_lesson RPC,
+                        # 0006 coach embeddings (pgvector)
     seed.sql            # 1 track + 7 lessons
-    functions/coach/    # Deno Edge Function (holds the Claude key)
+    functions/          # coach + revenuecat-webhook Edge Functions (Deno)
+  scripts/embed-lessons.ts   # Voyage AI lesson indexer (npx tsx, --dry-run)
   locales/ar.json, en.json
   .maestro/critical-path.yaml   # E2E flow
   docs/                 # phase-2/-5/-6/-8/-9 setup + phase-10 launch ops
@@ -84,13 +86,16 @@ npx expo start --tunnel        # scan QR with Expo Go
 These need YOUR accounts and can't be done from code:
 
 - [ ] **Supabase project** — create it, then run `supabase/migrations/0001`
-      through `0005`, and `seed.sql`, in order, in the SQL Editor.
+      through `0006`, and `seed.sql`, in order, in the SQL Editor.
       (A Supabase platform OUTAGE was blocking the SQL Editor as of last session
       — check https://status.supabase.com; it's temporary, not our bug.)
 - [ ] **`.env.local`** — set `EXPO_PUBLIC_SUPABASE_URL` + `_ANON_KEY`
       (the "publishable" `sb_...` key), from Supabase → Settings → API.
 - [ ] **Coach Edge Function** — `supabase functions deploy coach` and
       `supabase secrets set ANTHROPIC_API_KEY=sk-ant-...` (see docs/phase-5-setup.md).
+- [ ] **(Optional) Semantic coach retrieval** — set `VOYAGE_API_KEY` secret and
+      run `npx tsx scripts/embed-lessons.ts`; without it the coach uses FTS
+      (see the Coach v2 section of docs/phase-5-setup.md).
 - [ ] **RevenueCat webhook** — `supabase functions deploy revenuecat-webhook`,
       set `REVENUECAT_WEBHOOK_SECRET`, point RevenueCat's webhook at it
       (see docs/phase-11-server-authority.md).
