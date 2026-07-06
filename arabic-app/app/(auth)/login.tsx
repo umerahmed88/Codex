@@ -1,11 +1,17 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Text, StyleSheet, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { Link } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { TextField } from '../../src/components/TextField';
 import { Button } from '../../src/components/Button';
 import { useAuth } from '../../src/lib/AuthProvider';
-import { colors, spacing, typography } from '../../src/theme';
+import {
+  isAppleSignInAvailable,
+  isGoogleSignInAvailable,
+  signInWithApple,
+  signInWithGoogle,
+} from '../../src/lib/socialAuth';
+import { colors, spacing, typography, radius } from '../../src/theme';
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -14,6 +20,14 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Social buttons are invisible until configured (Phase 15): Apple needs an
+  // iOS device with the capability; Google needs EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID.
+  const [appleAvailable, setAppleAvailable] = useState(false);
+  const googleAvailable = isGoogleSignInAvailable();
+  useEffect(() => {
+    isAppleSignInAvailable().then(setAppleAvailable);
+  }, []);
 
   const handleLogin = async () => {
     setError(null);
@@ -25,6 +39,19 @@ export default function LoginScreen() {
       setError(t('auth.errorGeneric'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSocial = async (provider: 'apple' | 'google') => {
+    setError(null);
+    try {
+      if (provider === 'apple') await signInWithApple();
+      else await signInWithGoogle();
+      // AuthGate redirects on success, same as email login.
+    } catch (e) {
+      // Backing out of the provider sheet isn't an error — stay quiet.
+      if (e instanceof Error && e.message === 'cancelled') return;
+      setError(t('auth.errorGeneric'));
     }
   };
 
@@ -57,6 +84,29 @@ export default function LoginScreen() {
 
       <Button title={t('auth.loginButton')} onPress={handleLogin} loading={loading} />
 
+      {(appleAvailable || googleAvailable) && (
+        <>
+          {appleAvailable && (
+            <Pressable
+              style={styles.socialButton}
+              onPress={() => handleSocial('apple')}
+              accessibilityRole="button"
+            >
+              <Text style={styles.socialText}>{t('auth.appleSignIn')}</Text>
+            </Pressable>
+          )}
+          {googleAvailable && (
+            <Pressable
+              style={styles.socialButton}
+              onPress={() => handleSocial('google')}
+              accessibilityRole="button"
+            >
+              <Text style={styles.socialText}>{t('auth.googleSignIn')}</Text>
+            </Pressable>
+          )}
+        </>
+      )}
+
       <Link href="/(auth)/forgot-password" style={styles.link}>
         <Text style={styles.linkText}>{t('auth.forgotPassword')}</Text>
       </Link>
@@ -87,6 +137,21 @@ const styles = StyleSheet.create({
     color: colors.error,
     textAlign: 'right',
     marginBottom: spacing.md,
+  },
+  socialButton: {
+    marginTop: spacing.md,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  socialText: {
+    fontFamily: typography.fontFamily.arabicSemiBold,
+    fontSize: typography.size.md,
+    color: colors.textPrimary,
+    textAlign: 'center',
   },
   link: {
     marginTop: spacing.lg,

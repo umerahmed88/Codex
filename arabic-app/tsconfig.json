@@ -8,7 +8,7 @@
       "@/*": ["src/*"],
       "@/locales/*": ["locales/*"]
     },
-    "types": ["jest"]
+    "types": ["jest", "node"]
   },
   "exclude": ["supabase/functions"]
 }

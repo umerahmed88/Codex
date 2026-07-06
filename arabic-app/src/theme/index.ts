@@ -18,12 +18,17 @@ export const colors = {
   // Text
   textPrimary: '#1A1A2E',
   textSecondary: '#5A5A7A',
-  textMuted: '#9A9AB0',
+  // Darkened for WCAG AA (Phase 16 a11y audit): the old #9A9AB0 was ~2.5:1 on
+  // our light backgrounds; #696985 clears 4.5:1 on background and surface.
+  textMuted: '#696985',
   textInverse: '#FFFFFF',
 
   // Semantic
   success: '#2E8B57',
-  warning: '#E8A020',
+  // Darkened for WCAG AA (Phase 16): #E8A020 failed both as text on light
+  // surfaces (2.2:1) AND as the OfflineBanner background under white text
+  // (2.2:1). #9A6400 clears 4.5:1 in every one of those usages.
+  warning: '#9A6400',
   error: '#C0392B',
   info: '#2E5F8F',
 

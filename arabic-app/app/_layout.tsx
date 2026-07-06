@@ -6,7 +6,10 @@ import { OfflineBanner } from '../src/components/OfflineBanner';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { AuthProvider, useAuth } from '../src/lib/AuthProvider';
 import { SubscriptionProvider } from '../src/lib/SubscriptionProvider';
@@ -27,9 +30,25 @@ const queryClient = new QueryClient({
     queries: {
       retry: 2,
       staleTime: 1000 * 60 * 5,
+      // gcTime must be ≥ the persister maxAge for cached content to survive a
+      // cold start (Phase 16 offline reading).
+      gcTime: 1000 * 60 * 60 * 24, // 24h
     },
   },
 });
+
+// Persist the React Query cache to AsyncStorage so already-loaded lessons open
+// offline / on a cold start. We ONLY persist content (tracks + lessons), never
+// user-state queries (progress, streak, xp, coach counts) — those must always
+// reflect the server, and server-authority (Phase 11) makes stale local copies
+// pointless. Content is safe to show from disk while a fresh copy loads.
+const asyncStoragePersister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  key: 'rq-content-cache',
+});
+
+const PERSISTED_QUERY_KEYS = ['tracks', 'lessons'];
+
 
 // The "gate": redirects between the auth screens and the main app based on
 // whether a session exists. This is what makes login actually protect the app.
@@ -89,14 +108,24 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{
+          persister: asyncStoragePersister,
+          maxAge: 1000 * 60 * 60 * 24, // 24h — matches gcTime above
+          dehydrateOptions: {
+            shouldDehydrateQuery: (query) =>
+              PERSISTED_QUERY_KEYS.includes(query.queryKey[0] as string),
+          },
+        }}
+      >
         <AuthProvider>
           <SubscriptionProvider>
             <StatusBar style="light" />
             <AuthGate />
           </SubscriptionProvider>
         </AuthProvider>
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </ErrorBoundary>
   );
 }

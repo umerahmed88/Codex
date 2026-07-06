@@ -16,7 +16,8 @@ import { useAuth } from '../../src/lib/AuthProvider';
 import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useAskCoach, useCoachQuestionsToday } from '../../src/hooks/useCoach';
 import { useFeatureFlag } from '../../src/hooks/useAppConfig';
-import { remainingQuestions, type CoachTurn } from '../../src/lib/coach';
+import { remainingQuestions, isQuestionValid, MAX_QUESTION_LENGTH, type CoachTurn } from '../../src/lib/coach';
+import { askCoachStream } from '../../src/lib/coachStream';
 import { track } from '../../src/lib/analytics';
 import { colors, spacing, typography, radius } from '../../src/theme';
 
@@ -29,6 +30,7 @@ export default function CoachScreen() {
   const [input, setInput] = useState('');
   const [turns, setTurns] = useState<CoachTurn[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [streaming, setStreaming] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
   const { isSubscribed } = useSubscription();
@@ -37,14 +39,10 @@ export default function CoachScreen() {
   const { data: askedToday = 0, refetch } = useCoachQuestionsToday(userId);
   const left = remainingQuestions(askedToday, isSubscribed);
 
-  const handleSend = () => {
-    const question = input.trim();
-    if (!question || ask.isPending) return;
-    setError(null);
-    setInput('');
-    setTurns((prev) => [...prev, { role: 'user', text: question }]);
-    track('coach_question_asked');
+  const busy = ask.isPending || streaming;
 
+  // Non-streaming fallback (also the path when streaming isn't supported).
+  const sendNonStreaming = (question: string) => {
     ask.mutate(question, {
       onSuccess: (data) => {
         setTurns((prev) => [...prev, { role: 'coach', text: data.answer, citation: data.citation }]);
@@ -55,6 +53,74 @@ export default function CoachScreen() {
         setError(e.message === 'rate_limited' ? t('coach.rateLimited') : t('coach.error'));
       },
     });
+  };
+
+  const handleSend = async () => {
+    const question = input.trim();
+    if (!isQuestionValid(question) || busy) return;
+    setError(null);
+    setInput('');
+    setTurns((prev) => [...prev, { role: 'user', text: question }]);
+    track('coach_question_asked');
+
+    const accessToken = session?.access_token;
+    if (!accessToken) {
+      sendNonStreaming(question);
+      return;
+    }
+
+    // Streaming first (Phase 13): the coach bubble fills in token by token.
+    // Any streaming failure falls back to the buffered request — the user
+    // never sees a worse experience than before.
+    setStreaming(true);
+    // Index of the coach bubble we stream into (appended on first delta).
+    let bubbleIndex = -1;
+    try {
+      const result = await askCoachStream({
+        question,
+        accessToken,
+        onDelta: (textSoFar) => {
+          setTurns((prev) => {
+            if (bubbleIndex === -1) {
+              bubbleIndex = prev.length;
+              return [...prev, { role: 'coach', text: textSoFar }];
+            }
+            const next = [...prev];
+            next[bubbleIndex] = { ...next[bubbleIndex], text: textSoFar };
+            return next;
+          });
+          scrollRef.current?.scrollToEnd({ animated: false });
+        },
+      });
+      // Attach the citation once the stream completes.
+      setTurns((prev) => {
+        if (bubbleIndex === -1) {
+          return [...prev, { role: 'coach', text: result.answer, citation: result.citation }];
+        }
+        const next = [...prev];
+        next[bubbleIndex] = { role: 'coach', text: result.answer, citation: result.citation };
+        return next;
+      });
+      refetch();
+      requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+    } catch (e) {
+      const code = e instanceof Error ? e.message : 'coach_error';
+      // Remove a half-written bubble before retrying or showing an error.
+      if (bubbleIndex !== -1) {
+        const idx = bubbleIndex;
+        setTurns((prev) => prev.filter((_, i) => i !== idx));
+      }
+      if (code === 'rate_limited') {
+        setError(t('coach.rateLimited'));
+      } else if (code === 'rate_limited_burst' || code === 'question_too_long') {
+        setError(t('coach.error'));
+      } else {
+        // Transport/streaming problem — retry through the buffered path.
+        sendNonStreaming(question);
+      }
+    } finally {
+      setStreaming(false);
+    }
   };
 
   // Kill-switch: if the Coach is remotely disabled (e.g. an LLM cost spike or
@@ -93,7 +159,7 @@ export default function CoachScreen() {
           </View>
         ))}
 
-        {ask.isPending && (
+        {busy && turns[turns.length - 1]?.role === 'user' && (
           <View style={styles.coachBubble}>
             <ActivityIndicator color={colors.primary} />
             <Text style={styles.thinking}>{t('coach.thinking')}</Text>
@@ -113,15 +179,16 @@ export default function CoachScreen() {
           style={styles.input}
           value={input}
           onChangeText={setInput}
+          maxLength={MAX_QUESTION_LENGTH}
           placeholder={t('coach.placeholder')}
           placeholderTextColor={colors.textMuted}
           textAlign="right"
           multiline
         />
         <Pressable
-          style={[styles.sendButton, (!input.trim() || ask.isPending) && styles.sendDisabled]}
+          style={[styles.sendButton, (!input.trim() || busy) && styles.sendDisabled]}
           onPress={handleSend}
-          disabled={!input.trim() || ask.isPending}
+          disabled={!input.trim() || busy}
         >
           <Text style={styles.sendText}>{t('coach.send')}</Text>
         </Pressable>

@@ -1,11 +1,17 @@
 // Sentry pulls in a native module that can't load under the node test env, so
 // we mock it — we only care that track() shapes events and doesn't throw.
+import { buildBreadcrumb, track } from '../lib/analytics';
+import { Sentry } from '../lib/sentry';
+
 jest.mock('../lib/sentry', () => ({
   Sentry: { addBreadcrumb: jest.fn(), captureException: jest.fn() },
 }));
 
-import { buildBreadcrumb, track } from '../lib/analytics';
-import { Sentry } from '../lib/sentry';
+// posthog-react-native is likewise a native SDK; a null client is exactly the
+// unconfigured (no EXPO_PUBLIC_POSTHOG_KEY) production behavior.
+jest.mock('../lib/posthog', () => ({
+  getPostHog: () => null,
+}));
 
 describe('buildBreadcrumb', () => {
   it('shapes an event into an analytics breadcrumb', () => {

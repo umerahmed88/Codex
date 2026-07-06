@@ -1,12 +1,13 @@
-import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/lib/AuthProvider';
 import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useFeatureFlag } from '../../src/hooks/useAppConfig';
 import { useTrackData } from '../../src/hooks/useTrackData';
+import { useSelectedTrack } from '../../src/hooks/useSelectedTrack';
 import { shouldShowPaywall } from '../../src/lib/entitlements';
-import type { LessonWithProgress } from '../../src/types/database';
+import type { LessonWithProgress, Track } from '../../src/types/database';
 import { colors, spacing, typography, radius } from '../../src/theme';
 
 export default function LearnScreen() {
@@ -15,7 +16,8 @@ export default function LearnScreen() {
   const { session } = useAuth();
   const { isSubscribed } = useSubscription();
   const paywallEnabled = useFeatureFlag('paywall');
-  const { lessons, isLoading, isError } = useTrackData(session?.user.id);
+  const { track, tracks, lessons, isLoading, isError } = useTrackData(session?.user.id);
+  const selectTrack = useSelectedTrack((s) => s.select);
 
   const openLesson = (lesson: LessonWithProgress) => {
     if (paywallEnabled && shouldShowPaywall(lesson, isSubscribed)) {
@@ -43,6 +45,32 @@ export default function LearnScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{t('learn.title')}</Text>
+      {/* Track switcher — only rendered once more than one track exists. */}
+      {tracks.length > 1 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.trackScroller}
+          contentContainerStyle={styles.trackChips}
+        >
+          {tracks.map((tr: Track) => {
+            const selected = tr.id === track?.id;
+            return (
+              <Pressable
+                key={tr.id}
+                style={[styles.trackChip, selected && styles.trackChipSel]}
+                onPress={() => selectTrack(tr.slug)}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+              >
+                <Text style={[styles.trackChipText, selected && styles.trackChipTextSel]}>
+                  {tr.title_ar}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
       <FlatList
         data={lessons}
         keyExtractor={(l) => l.id}
@@ -102,6 +130,23 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'right',
   },
+  trackScroller: { flexGrow: 0, marginBottom: spacing.md },
+  trackChips: { flexDirection: 'row-reverse', gap: spacing.sm },
+  trackChip: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  trackChipSel: { backgroundColor: colors.primary, borderColor: colors.primary },
+  trackChipText: {
+    fontFamily: typography.fontFamily.arabicSemiBold,
+    fontSize: typography.size.sm,
+    color: colors.textSecondary,
+  },
+  trackChipTextSel: { color: colors.textInverse },
   row: {
     flexDirection: 'row-reverse',
     alignItems: 'center',

@@ -3,12 +3,14 @@ import { View, Text, StyleSheet, Pressable, Switch, Platform, Linking, ScrollVie
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import i18n from '../../src/lib/i18n';
+import i18n, { setLocale } from '../../src/lib/i18n';
 import { useAuth } from '../../src/lib/AuthProvider';
 import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useStreak, useXp } from '../../src/hooks/useStreakXp';
 import { useNotificationSettings } from '../../src/hooks/useNotificationSettings';
 import { useFeatureFlag } from '../../src/hooks/useAppConfig';
+import { useFormatNumber } from '../../src/hooks/useFormatNumber';
+import { unregisterPushToken } from '../../src/lib/pushTokens';
 import { StreakBadge } from '../../src/components/StreakBadge';
 import { LevelProgress } from '../../src/components/LevelProgress';
 import { isStreakActive, toDayString } from '../../src/lib/streak';
@@ -29,6 +31,7 @@ export default function ProfileScreen() {
   const { data: xp } = useXp(userId);
   const { settings, update } = useNotificationSettings();
   const feedbackEnabled = useFeatureFlag('feedback');
+  const fmt = useFormatNumber();
 
   // "Manage subscription" deep-links to the store's subscription settings.
   const manageSubscription = () => {
@@ -47,7 +50,8 @@ export default function ProfileScreen() {
   const active = isStreakActive(streakState, today);
 
   const toggleLocale = () => {
-    i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar');
+    // setLocale persists the choice so it survives app restarts (Phase 12).
+    void setLocale(i18n.language === 'ar' ? 'en' : 'ar');
   };
 
   const onToggleReminder = async (value: boolean) => {
@@ -72,7 +76,7 @@ export default function ProfileScreen() {
       <View style={styles.card}>
         <View style={styles.streakRow}>
           <StreakBadge count={streakState.current_streak} active={active} />
-          <Text style={styles.longest}>{t('gamify.longest', { count: streakState.longest_streak })}</Text>
+          <Text style={styles.longest}>{t('gamify.longest', { count: fmt(streakState.longest_streak) })}</Text>
         </View>
         <LevelProgress totalXp={xp?.total_xp ?? 0} />
       </View>
@@ -133,7 +137,14 @@ export default function ProfileScreen() {
         </Text>
       </Pressable>
 
-      <Pressable style={styles.logoutButton} onPress={() => signOut()}>
+      <Pressable
+        style={styles.logoutButton}
+        onPress={async () => {
+          // Deregister push first — after signOut, RLS blocks the delete.
+          await unregisterPushToken();
+          await signOut();
+        }}
+      >
         <Text style={styles.logoutText}>{t('auth.logout')}</Text>
       </Pressable>
 
