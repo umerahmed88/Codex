@@ -38,9 +38,11 @@ Sentry · Claude API (`claude-opus-4-8`) via a Supabase Edge Function.
 | 13 | Coach v2: streaming, conversation memory, pgvector (optional) | ✅ |
 | 14 | Content pipeline: import script, template, second track + multi-track UI | ✅ |
 | 15 | Growth: PostHog, remote push, Apple/Google sign-in | ✅ |
-| 16 | Ops: offline lesson cache, staging env, a11y/numerals, data ops | ⏳ |
+| 16 | Ops: offline lesson cache, staging env, a11y/numerals, data ops | ✅ |
 
-**Tests:** `npm test` → 105 passing (logic + component projects). `npx tsc --noEmit` clean. `npm run lint` clean.
+**Improvement roadmap COMPLETE.** See `ROADMAP.md` for the done/deferred summary.
+
+**Tests:** `npm test` → 125 passing (logic + component projects). `npx tsc --noEmit` clean. `npm run lint` clean.
 
 ## Repo layout
 
@@ -70,7 +72,8 @@ arabic-app/
   content/template.csv  # lesson authoring template (docs/content-pipeline.md)
   locales/ar.json, en.json
   .maestro/critical-path.yaml   # E2E flow
-  docs/                 # phase-2/-5/-6/-8/-9 setup + phase-10 launch ops
+  docs/                 # setup + ops guides (per-phase); content-pipeline,
+                        # phase-15-growth, staging-environment, data-ops
 ```
 
 ## How to run (in a Codespace — see docs/running-in-codespaces.md)

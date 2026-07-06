@@ -9,6 +9,7 @@ import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useStreak, useXp } from '../../src/hooks/useStreakXp';
 import { useNotificationSettings } from '../../src/hooks/useNotificationSettings';
 import { useFeatureFlag } from '../../src/hooks/useAppConfig';
+import { useFormatNumber } from '../../src/hooks/useFormatNumber';
 import { unregisterPushToken } from '../../src/lib/pushTokens';
 import { StreakBadge } from '../../src/components/StreakBadge';
 import { LevelProgress } from '../../src/components/LevelProgress';
@@ -30,6 +31,7 @@ export default function ProfileScreen() {
   const { data: xp } = useXp(userId);
   const { settings, update } = useNotificationSettings();
   const feedbackEnabled = useFeatureFlag('feedback');
+  const fmt = useFormatNumber();
 
   // "Manage subscription" deep-links to the store's subscription settings.
   const manageSubscription = () => {
@@ -74,7 +76,7 @@ export default function ProfileScreen() {
       <View style={styles.card}>
         <View style={styles.streakRow}>
           <StreakBadge count={streakState.current_streak} active={active} />
-          <Text style={styles.longest}>{t('gamify.longest', { count: streakState.longest_streak })}</Text>
+          <Text style={styles.longest}>{t('gamify.longest', { count: fmt(streakState.longest_streak) })}</Text>
         </View>
         <LevelProgress totalXp={xp?.total_xp ?? 0} />
       </View>

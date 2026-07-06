@@ -1,19 +1,23 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { levelProgress } from '@/lib/xp';
+import { useFormatNumber } from '@/hooks/useFormatNumber';
 import { colors, spacing, typography, radius } from '@/theme';
 
 // Shows the current level and a progress bar toward the next one.
 export function LevelProgress({ totalXp }: { totalXp: number }) {
   const { t } = useTranslation();
+  const fmt = useFormatNumber();
   const { level, nextLevelXp, progress } = levelProgress(totalXp);
   const pct = Math.max(0, Math.min(1, progress)) * 100;
 
   return (
     <View style={styles.wrapper}>
       <View style={styles.headerRow}>
-        <Text style={styles.level}>{t('gamify.level', { level })}</Text>
-        <Text style={styles.xp}>{t('gamify.xpOf', { current: totalXp, next: nextLevelXp })}</Text>
+        <Text style={styles.level}>{t('gamify.level', { level: fmt(level) })}</Text>
+        <Text style={styles.xp}>
+          {t('gamify.xpOf', { current: fmt(totalXp), next: fmt(nextLevelXp) })}
+        </Text>
       </View>
       <View style={styles.track}>
         <View style={[styles.fill, { width: `${pct}%` }]} />

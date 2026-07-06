@@ -1,13 +1,15 @@
 import { View, Text, StyleSheet } from 'react-native';
+import { useFormatNumber } from '@/hooks/useFormatNumber';
 import { colors, spacing, typography, radius } from '@/theme';
 
 // A compact flame + streak count. Greyed out when the streak is broken/zero so
 // the flame visually "goes cold".
 export function StreakBadge({ count, active }: { count: number; active: boolean }) {
+  const fmt = useFormatNumber();
   return (
     <View style={[styles.pill, !active && styles.pillCold]}>
       <Text style={styles.flame}>{active ? '🔥' : '🧊'}</Text>
-      <Text style={[styles.count, !active && styles.countCold]}>{count}</Text>
+      <Text style={[styles.count, !active && styles.countCold]}>{fmt(count)}</Text>
     </View>
   );
 }
