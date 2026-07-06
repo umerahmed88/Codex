@@ -37,7 +37,7 @@ Sentry · Claude API (`claude-opus-4-8`) via a Supabase Edge Function.
 | 12 | Quality: ESLint+CI, persisted locale, component tests | ✅ |
 | 13 | Coach v2: streaming, conversation memory, pgvector (optional) | ✅ |
 | 14 | Content pipeline: import script, template, second track + multi-track UI | ✅ |
-| 15 | Growth: PostHog, remote push, Apple/Google sign-in | ⏳ |
+| 15 | Growth: PostHog, remote push, Apple/Google sign-in | ✅ |
 | 16 | Ops: offline lesson cache, staging env, a11y/numerals, data ops | ⏳ |
 
 **Tests:** `npm test` → 105 passing (logic + component projects). `npx tsc --noEmit` clean. `npm run lint` clean.
@@ -63,9 +63,9 @@ arabic-app/
   supabase/
     migrations/         # 0001 schema, 0002 RLS, 0003 coach retrieval,
                         # 0004 launch ops, 0005 complete_lesson RPC,
-                        # 0006 coach embeddings (pgvector)
+                        # 0006 coach embeddings (pgvector), 0007 push_tokens
     seed.sql            # 2 tracks × 7 lessons (Communication, Confidence)
-    functions/          # coach + revenuecat-webhook Edge Functions (Deno)
+    functions/          # coach + revenuecat-webhook + send-push (Deno)
   scripts/              # embed-lessons.ts + import-lessons.ts (npx tsx, --dry-run)
   content/template.csv  # lesson authoring template (docs/content-pipeline.md)
   locales/ar.json, en.json
@@ -97,6 +97,11 @@ These need YOUR accounts and can't be done from code:
 - [ ] **(Optional) Semantic coach retrieval** — set `VOYAGE_API_KEY` secret and
       run `npx tsx scripts/embed-lessons.ts`; without it the coach uses FTS
       (see the Coach v2 section of docs/phase-5-setup.md).
+- [ ] **(Optional) Growth features** — PostHog (`EXPO_PUBLIC_POSTHOG_KEY`),
+      remote push (run migration `0007`, deploy `send-push`, set
+      `SEND_PUSH_SECRET`), and Apple/Google sign-in (provider config +
+      `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`). All stay off until configured —
+      see docs/phase-15-growth.md.
 - [ ] **RevenueCat webhook** — `supabase functions deploy revenuecat-webhook`,
       set `REVENUECAT_WEBHOOK_SECRET`, point RevenueCat's webhook at it
       (see docs/phase-11-server-authority.md).

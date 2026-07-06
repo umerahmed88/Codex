@@ -1,16 +1,25 @@
+import { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Text } from 'react-native';
 import { useAuth } from '../../src/lib/AuthProvider';
 import { useOfflineSync } from '../../src/hooks/useOfflineSync';
+import { registerPushToken } from '../../src/lib/pushTokens';
 import { colors, typography } from '../../src/theme';
 
 export default function TabLayout() {
   const { t } = useTranslation();
   const { session } = useAuth();
+  const userId = session?.user.id;
 
   // Flush any offline-queued lesson completions once the user is in the app.
-  useOfflineSync(session?.user.id);
+  useOfflineSync(userId);
+
+  // Register this device for remote push (Phase 15). No-op unless the user
+  // already granted notification permission via the reminder opt-in.
+  useEffect(() => {
+    if (userId) void registerPushToken(userId);
+  }, [userId]);
 
   return (
     <Tabs

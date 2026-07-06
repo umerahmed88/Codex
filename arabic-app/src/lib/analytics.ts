@@ -2,12 +2,15 @@
 // Lightweight product analytics / monitoring.
 //
 // One typed funnel for the handful of launch events we actually care about
-// (activation, paywall, coach, retention). Events go to Sentry as breadcrumbs
-// so a crash report carries the trail of what the user did just before it —
-// that's our post-launch monitoring signal without adding a heavy 3rd-party
-// SDK. The event-name and property shaping is pure so it stays testable.
+// (activation, paywall, coach, retention). Every event is dual-written:
+//   1. Sentry breadcrumb — a crash report carries the trail of what the user
+//      did just before it (monitoring signal).
+//   2. PostHog event (Phase 15) — funnels/retention dashboards. Silent no-op
+//      until EXPO_PUBLIC_POSTHOG_KEY is set (see src/lib/posthog.ts).
+// The closed event union stays the single source of truth for both sinks.
 // ============================================================================
 import { Sentry } from './sentry';
+import { getPostHog } from './posthog';
 
 // The closed set of events we track. Keeping this a union (not free-form
 // strings) means dashboards never drown in typo'd one-off event names.
@@ -43,6 +46,11 @@ export function track(event: AnalyticsEvent, props?: AnalyticsProps): void {
     Sentry.addBreadcrumb(buildBreadcrumb(event, props));
   } catch (err) {
     // Analytics failing is not worth crashing a screen over.
+    Sentry.captureException(err);
+  }
+  try {
+    getPostHog()?.capture(event, props);
+  } catch (err) {
     Sentry.captureException(err);
   }
 }

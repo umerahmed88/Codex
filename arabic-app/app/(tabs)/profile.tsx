@@ -9,6 +9,7 @@ import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useStreak, useXp } from '../../src/hooks/useStreakXp';
 import { useNotificationSettings } from '../../src/hooks/useNotificationSettings';
 import { useFeatureFlag } from '../../src/hooks/useAppConfig';
+import { unregisterPushToken } from '../../src/lib/pushTokens';
 import { StreakBadge } from '../../src/components/StreakBadge';
 import { LevelProgress } from '../../src/components/LevelProgress';
 import { isStreakActive, toDayString } from '../../src/lib/streak';
@@ -134,7 +135,14 @@ export default function ProfileScreen() {
         </Text>
       </Pressable>
 
-      <Pressable style={styles.logoutButton} onPress={() => signOut()}>
+      <Pressable
+        style={styles.logoutButton}
+        onPress={async () => {
+          // Deregister push first — after signOut, RLS blocks the delete.
+          await unregisterPushToken();
+          await signOut();
+        }}
+      >
         <Text style={styles.logoutText}>{t('auth.logout')}</Text>
       </Pressable>
 

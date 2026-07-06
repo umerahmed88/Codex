@@ -7,6 +7,12 @@ jest.mock('../lib/sentry', () => ({
   Sentry: { addBreadcrumb: jest.fn(), captureException: jest.fn() },
 }));
 
+// posthog-react-native is likewise a native SDK; a null client is exactly the
+// unconfigured (no EXPO_PUBLIC_POSTHOG_KEY) production behavior.
+jest.mock('../lib/posthog', () => ({
+  getPostHog: () => null,
+}));
+
 describe('buildBreadcrumb', () => {
   it('shapes an event into an analytics breadcrumb', () => {
     expect(buildBreadcrumb('lesson_completed', { day: 3 })).toEqual({

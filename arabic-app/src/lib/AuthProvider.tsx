@@ -9,6 +9,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
+import { identifyUser, resetUser } from './posthog';
 
 interface AuthContextValue {
   session: Session | null;
@@ -33,8 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     // 2. Keep our state in sync with every future auth change (login/logout).
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
+      // Analytics identity follows auth: opaque user id on login, detached on
+      // logout so the next user on this device isn't mislabeled (Phase 15).
+      if (event === 'SIGNED_IN' && newSession) identifyUser(newSession.user.id);
+      if (event === 'SIGNED_OUT') resetUser();
     });
 
     return () => sub.subscription.unsubscribe();
