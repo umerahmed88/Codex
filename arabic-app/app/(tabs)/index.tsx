@@ -8,6 +8,7 @@ import { useTrackData } from '../../src/hooks/useTrackData';
 import { useStreak } from '../../src/hooks/useStreakXp';
 import { selectTodaysLesson } from '../../src/lib/lessonProgress';
 import { shouldShowPaywall } from '../../src/lib/entitlements';
+import { isPurchasesConfigured } from '../../src/lib/purchases';
 import { isStreakActive, toDayString } from '../../src/lib/streak';
 import { StreakBadge } from '../../src/components/StreakBadge';
 import type { LessonWithProgress } from '../../src/types/database';
@@ -20,15 +21,16 @@ export default function TodayScreen() {
   const userId = session?.user.id;
 
   const { isSubscribed } = useSubscription();
-  // Kill-switch: if the paywall flag is pulled (e.g. billing outage), stop
-  // diverting users to a broken purchase screen — fail open to the content.
-  const paywallEnabled = useFeatureFlag('paywall');
+  // Paywall is active only when its flag is on AND RevenueCat is actually
+  // configured. Kill-switch (billing outage) or missing keys → fail open to the
+  // content instead of diverting to a broken purchase screen.
+  const paywallActive = useFeatureFlag('paywall') && isPurchasesConfigured();
   const { lessons, isLoading, isError } = useTrackData(userId);
   const { data: streak } = useStreak(userId);
 
   // Open a lesson, or divert to the paywall if it's premium and locked behind it.
   const openLesson = (lesson: LessonWithProgress) => {
-    if (paywallEnabled && shouldShowPaywall(lesson, isSubscribed)) {
+    if (paywallActive && shouldShowPaywall(lesson, isSubscribed)) {
       router.push('/paywall');
     } else {
       router.push(`/lesson/${lesson.id}`);

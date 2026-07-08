@@ -9,6 +9,7 @@ import { useTrackData } from '../../src/hooks/useTrackData';
 import { useStreak, useXp } from '../../src/hooks/useStreakXp';
 import { useCompleteLesson } from '../../src/hooks/useCompleteLesson';
 import { shouldShowPaywall } from '../../src/lib/entitlements';
+import { isPurchasesConfigured } from '../../src/lib/purchases';
 import { milestoneForStreak, type Milestone } from '../../src/lib/milestones';
 import { Button } from '../../src/components/Button';
 import { MilestoneCelebration } from '../../src/components/MilestoneCelebration';
@@ -22,7 +23,7 @@ export default function LessonPlayerScreen() {
   const userId = session?.user.id;
 
   const { isSubscribed } = useSubscription();
-  const paywallEnabled = useFeatureFlag('paywall');
+  const paywallActive = useFeatureFlag('paywall') && isPurchasesConfigured();
   const { lessons, rawLessons, isLoading, isError } = useTrackData(userId);
   const { data: streak } = useStreak(userId);
   const { data: xp } = useXp(userId);
@@ -35,10 +36,10 @@ export default function LessonPlayerScreen() {
   // Deep-link guard: if this lesson is premium and the user isn't subscribed,
   // send them to the paywall instead of showing the content.
   useEffect(() => {
-    if (merged && paywallEnabled && shouldShowPaywall(merged, isSubscribed)) {
+    if (merged && paywallActive && shouldShowPaywall(merged, isSubscribed)) {
       router.replace('/paywall');
     }
-  }, [merged, isSubscribed, paywallEnabled, router]);
+  }, [merged, isSubscribed, paywallActive, router]);
 
   if (isLoading) {
     return (

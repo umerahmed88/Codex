@@ -19,6 +19,15 @@ import { PREMIUM_ENTITLEMENT } from './entitlements';
 const iosKey = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? '';
 const androidKey = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '';
 
+// Is a RevenueCat key present for THIS platform? When false, purchases are not
+// configured — the paywall is inert and premium gating is disabled so we never
+// route users to a paywall that can't load (graceful fallback until keys are
+// set). Mirrors the key check in configurePurchases below.
+export function isPurchasesConfigured(): boolean {
+  const apiKey = Platform.select({ ios: iosKey, android: androidKey, default: '' });
+  return !!apiKey;
+}
+
 // Configure RevenueCat once at startup, tying purchases to the logged-in user
 // so entitlements follow them across devices.
 export function configurePurchases(appUserId: string) {
@@ -41,6 +50,10 @@ export async function getCustomerInfo(): Promise<CustomerInfo> {
 
 // Fetch the current offering (the set of subscription packages to show).
 export async function getCurrentOffering(): Promise<PurchasesOffering | null> {
+  // Without a key RevenueCat is never configured; calling getOfferings() then
+  // hangs on native. Fail fast so the paywall shows "unavailable" instead of
+  // spinning forever.
+  if (!isPurchasesConfigured()) throw new Error('purchases_not_configured');
   const offerings = await Purchases.getOfferings();
   return offerings.current;
 }
