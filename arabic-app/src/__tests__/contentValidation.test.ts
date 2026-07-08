@@ -11,6 +11,7 @@ import {
 } from '../lib/contentValidation';
 import {
   interestToTrackSlug,
+  trackTitle,
   DEFAULT_TRACK_SLUG,
   CONFIDENCE_TRACK_SLUG,
 } from '../lib/tracks';
@@ -133,6 +134,20 @@ describe('validateContent', () => {
   it('flags encoding mishaps (replacement character)', () => {
     const result = validateContent([row({ body_ar: arabicBody + '�' })]);
     expect(result.errors.join('\n')).toMatch(/UTF-8/);
+  });
+});
+
+describe('trackTitle', () => {
+  const track = { title_ar: 'الثقة بالنفس', title_en: 'Self-Confidence' };
+
+  it('uses the English name in English (and ar-* stays Arabic)', () => {
+    expect(trackTitle(track, 'en')).toBe('Self-Confidence');
+    expect(trackTitle(track, 'en-US')).toBe('Self-Confidence');
+    expect(trackTitle(track, 'ar')).toBe('الثقة بالنفس');
+  });
+
+  it('falls back to Arabic when there is no English name', () => {
+    expect(trackTitle({ title_ar: 'مسار', title_en: null }, 'en')).toBe('مسار');
   });
 });
 

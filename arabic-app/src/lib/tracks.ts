@@ -11,6 +11,17 @@
 export const DEFAULT_TRACK_SLUG = 'communication-charisma';
 export const CONFIDENCE_TRACK_SLUG = 'self-confidence';
 
+// Pick a track's display name for the current UI language. Tracks carry an
+// English name (title_en); when the app is in English and it exists, use it,
+// otherwise fall back to the Arabic name. (Lessons are Arabic-only content, so
+// this applies to track names only.)
+export function trackTitle(
+  track: { title_ar: string; title_en: string | null },
+  language: string
+): string {
+  return language.startsWith('en') && track.title_en ? track.title_en : track.title_ar;
+}
+
 // Map an onboarding interest key (see app/(onboarding)/index.tsx) to the
 // track the user most likely wants first. Unknown/missing interests fall back
 // to the default track — never a broken empty state.

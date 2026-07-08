@@ -6,13 +6,14 @@ import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useFeatureFlag } from '../../src/hooks/useAppConfig';
 import { useTrackData } from '../../src/hooks/useTrackData';
 import { useSelectedTrack } from '../../src/hooks/useSelectedTrack';
+import { trackTitle } from '../../src/lib/tracks';
 import { shouldShowPaywall } from '../../src/lib/entitlements';
 import { isPurchasesConfigured } from '../../src/lib/purchases';
 import type { LessonWithProgress, Track } from '../../src/types/database';
 import { colors, spacing, typography, radius } from '../../src/theme';
 
 export default function LearnScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const { session } = useAuth();
   const { isSubscribed } = useSubscription();
@@ -65,7 +66,7 @@ export default function LearnScreen() {
                 accessibilityState={{ selected }}
               >
                 <Text style={[styles.trackChipText, selected && styles.trackChipTextSel]}>
-                  {tr.title_ar}
+                  {trackTitle(tr, i18n.language)}
                 </Text>
               </Pressable>
             );
