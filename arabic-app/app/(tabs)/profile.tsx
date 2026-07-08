@@ -11,6 +11,7 @@ import { useNotificationSettings } from '../../src/hooks/useNotificationSettings
 import { useFeatureFlag } from '../../src/hooks/useAppConfig';
 import { useFormatNumber } from '../../src/hooks/useFormatNumber';
 import { unregisterPushToken } from '../../src/lib/pushTokens';
+import { isPurchasesConfigured } from '../../src/lib/purchases';
 import { StreakBadge } from '../../src/components/StreakBadge';
 import { LevelProgress } from '../../src/components/LevelProgress';
 import { isStreakActive, toDayString } from '../../src/lib/streak';
@@ -81,22 +82,25 @@ export default function ProfileScreen() {
         <LevelProgress totalXp={xp?.total_xp ?? 0} />
       </View>
 
-      {/* Subscription */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>{t('profile.manageSubscription')}</Text>
-        {isSubscribed ? (
-          <View style={styles.settingRow}>
-            <Text style={styles.subscribed}>{t('profile.subscribed')}</Text>
-            <Pressable onPress={manageSubscription} accessibilityRole="link">
-              <Text style={styles.link}>{t('profile.manageSubscription')}</Text>
+      {/* Subscription — hidden entirely until RevenueCat is configured, so we
+          never show an "Upgrade" button that leads to a paywall with no plans. */}
+      {isPurchasesConfigured() && (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>{t('profile.manageSubscription')}</Text>
+          {isSubscribed ? (
+            <View style={styles.settingRow}>
+              <Text style={styles.subscribed}>{t('profile.subscribed')}</Text>
+              <Pressable onPress={manageSubscription} accessibilityRole="link">
+                <Text style={styles.link}>{t('profile.manageSubscription')}</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable style={styles.upgradeButton} onPress={() => router.push('/paywall')}>
+              <Text style={styles.upgradeText}>{t('profile.upgrade')}</Text>
             </Pressable>
-          </View>
-        ) : (
-          <Pressable style={styles.upgradeButton} onPress={() => router.push('/paywall')}>
-            <Text style={styles.upgradeText}>{t('profile.upgrade')}</Text>
-          </Pressable>
-        )}
-      </View>
+          )}
+        </View>
+      )}
 
       {/* Daily reminder */}
       <View style={styles.card}>

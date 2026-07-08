@@ -1,30 +1,5 @@
--- ============================================================================
--- FULL SETUP — paste this whole file into the Supabase SQL Editor and Run.
--- It is migrations 0001–0007 + seed.sql concatenated in order.
--- Safe to re-run: every statement is idempotent (if not exists / on conflict).
--- Generated from supabase/migrations/*.sql + seed.sql — do not edit by hand.
--- ============================================================================
-
-
--- >>>>>>>>>>>>>>>>>>>>>>>>>>>>  0001_initial_schema.sql  <<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
--- ============================================================================
--- Phase 2 — Initial schema for the Arabic self-improvement app
--- ============================================================================
--- This file defines every table the app needs. Run it once against your
--- Supabase project (via the SQL Editor or `supabase db push`).
---
--- Naming: snake_case columns, plural table names. Every table has a UUID
--- primary key and created_at timestamp for auditability.
--- ============================================================================
-
--- Enable the UUID generator (Supabase ships with pgcrypto available)
 create extension if not exists "pgcrypto";
 
--- ----------------------------------------------------------------------------
--- users — one row per person. Mirrors Supabase's auth.users but holds the
--- app-specific profile fields. Linked 1:1 to auth.users via id.
--- ----------------------------------------------------------------------------
 create table if not exists public.users (
   id                  uuid primary key references auth.users (id) on delete cascade,
   email               text unique not null,
@@ -34,10 +9,6 @@ create table if not exists public.users (
   created_at          timestamptz not null default now()
 );
 
--- ----------------------------------------------------------------------------
--- tracks — a themed course (e.g. "Communication & Charisma"). Content, not
--- user data, so it is world-readable.
--- ----------------------------------------------------------------------------
 create table if not exists public.tracks (
   id             uuid primary key default gen_random_uuid(),
   slug           text unique not null,
@@ -49,9 +20,6 @@ create table if not exists public.tracks (
   created_at     timestamptz not null default now()
 );
 
--- ----------------------------------------------------------------------------
--- lessons — one daily lesson inside a track.
--- ----------------------------------------------------------------------------
 create table if not exists public.lessons (
   id          uuid primary key default gen_random_uuid(),
   track_id    uuid not null references public.tracks (id) on delete cascade,
@@ -66,9 +34,6 @@ create table if not exists public.lessons (
   unique (track_id, day_number)
 );
 
--- ----------------------------------------------------------------------------
--- lesson_progress — tracks each user's status on each lesson.
--- ----------------------------------------------------------------------------
 create table if not exists public.lesson_progress (
   id           uuid primary key default gen_random_uuid(),
   user_id      uuid not null references public.users (id) on delete cascade,
@@ -79,9 +44,6 @@ create table if not exists public.lesson_progress (
   unique (user_id, lesson_id)
 );
 
--- ----------------------------------------------------------------------------
--- streaks — one row per user, the daily-habit counter.
--- ----------------------------------------------------------------------------
 create table if not exists public.streaks (
   user_id          uuid primary key references public.users (id) on delete cascade,
   current_streak   integer not null default 0,
@@ -89,17 +51,11 @@ create table if not exists public.streaks (
   last_active_date date
 );
 
--- ----------------------------------------------------------------------------
--- xp — one row per user, the experience-point total.
--- ----------------------------------------------------------------------------
 create table if not exists public.xp (
   user_id   uuid primary key references public.users (id) on delete cascade,
   total_xp  integer not null default 0
 );
 
--- ----------------------------------------------------------------------------
--- coach_messages — the AI coach Q&A history (populated in Phase 5).
--- ----------------------------------------------------------------------------
 create table if not exists public.coach_messages (
   id              uuid primary key default gen_random_uuid(),
   user_id         uuid not null references public.users (id) on delete cascade,
@@ -109,15 +65,10 @@ create table if not exists public.coach_messages (
   created_at      timestamptz not null default now()
 );
 
--- Helpful indexes for the queries the app runs most often
 create index if not exists idx_lessons_track on public.lessons (track_id, "order");
 create index if not exists idx_progress_user on public.lesson_progress (user_id);
 create index if not exists idx_coach_user on public.coach_messages (user_id, created_at desc);
 
--- ----------------------------------------------------------------------------
--- Auto-provision: when a new auth user signs up, create their profile rows.
--- This keeps the app tables in sync with Supabase Auth automatically.
--- ----------------------------------------------------------------------------
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -139,21 +90,6 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- >>>>>>>>>>>>>>>>>>>>>>>>>>>>  0002_rls_policies.sql  <<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
--- ============================================================================
--- Phase 2 — Row-Level Security (RLS) policies
--- ============================================================================
--- WHY THIS MATTERS: without RLS, anyone with your public API key could read
--- EVERY user's progress, streak, and coach messages. RLS is a wall enforced
--- by the database itself: each user can only touch their OWN rows.
---
--- Content tables (tracks, lessons) are world-readable — they hold no private
--- data and every logged-in user needs them.
--- ============================================================================
-
--- Turn RLS ON for every table. (With RLS on and no policy, access is DENIED
--- by default — a safe starting point.)
 alter table public.users           enable row level security;
 alter table public.tracks          enable row level security;
 alter table public.lessons         enable row level security;
@@ -162,9 +98,6 @@ alter table public.streaks         enable row level security;
 alter table public.xp              enable row level security;
 alter table public.coach_messages  enable row level security;
 
--- ----------------------------------------------------------------------------
--- users: a person can read and update only their own profile row.
--- ----------------------------------------------------------------------------
 create policy "users read own profile"
   on public.users for select
   using (auth.uid() = id);
@@ -173,10 +106,6 @@ create policy "users update own profile"
   on public.users for update
   using (auth.uid() = id);
 
--- ----------------------------------------------------------------------------
--- tracks & lessons: readable by any authenticated user (they are content).
--- No insert/update/delete policy → clients cannot modify content.
--- ----------------------------------------------------------------------------
 create policy "tracks readable by all authenticated"
   on public.tracks for select
   to authenticated
@@ -187,9 +116,6 @@ create policy "lessons readable by all authenticated"
   to authenticated
   using (true);
 
--- ----------------------------------------------------------------------------
--- lesson_progress: full CRUD, but ONLY on rows the user owns.
--- ----------------------------------------------------------------------------
 create policy "progress select own"
   on public.lesson_progress for select
   using (auth.uid() = user_id);
@@ -202,9 +128,6 @@ create policy "progress update own"
   on public.lesson_progress for update
   using (auth.uid() = user_id);
 
--- ----------------------------------------------------------------------------
--- streaks: read & update own row only.
--- ----------------------------------------------------------------------------
 create policy "streaks select own"
   on public.streaks for select
   using (auth.uid() = user_id);
@@ -213,9 +136,6 @@ create policy "streaks update own"
   on public.streaks for update
   using (auth.uid() = user_id);
 
--- ----------------------------------------------------------------------------
--- xp: read & update own row only.
--- ----------------------------------------------------------------------------
 create policy "xp select own"
   on public.xp for select
   using (auth.uid() = user_id);
@@ -224,9 +144,6 @@ create policy "xp update own"
   on public.xp for update
   using (auth.uid() = user_id);
 
--- ----------------------------------------------------------------------------
--- coach_messages: read & insert own only.
--- ----------------------------------------------------------------------------
 create policy "coach select own"
   on public.coach_messages for select
   using (auth.uid() = user_id);
@@ -235,25 +152,6 @@ create policy "coach insert own"
   on public.coach_messages for insert
   with check (auth.uid() = user_id);
 
--- >>>>>>>>>>>>>>>>>>>>>>>>>>>>  0003_coach_retrieval.sql  <<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
--- ============================================================================
--- Phase 5 — Retrieval for the AI Coach
--- ============================================================================
--- The coach must answer ONLY from our lesson content. This migration adds a
--- full-text search function that returns the lessons most relevant to a
--- question, so the Edge Function can send ONLY those excerpts to the LLM.
---
--- We use Postgres full-text search (the 'simple' config tokenizes Arabic text
--- without stemming, which works well for keyword matching). This needs no
--- external embeddings API, so it runs the moment you have a Supabase project.
--- The production upgrade path — pgvector semantic embeddings — is noted in
--- docs/phase-5-setup.md; the Edge Function is structured so it can be swapped
--- in without touching the app.
--- ============================================================================
-
--- A generated tsvector column over the searchable lesson text, kept in sync
--- automatically by Postgres.
 alter table public.lessons
   add column if not exists search_vector tsvector
   generated always as (
@@ -262,9 +160,6 @@ alter table public.lessons
 
 create index if not exists idx_lessons_search on public.lessons using gin (search_vector);
 
--- match_lessons: given a free-text question, return the top-N most relevant
--- lessons ranked by relevance. SECURITY DEFINER so the Edge Function can call
--- it; it only reads content (no private data), so this is safe.
 create or replace function public.match_lessons(query_text text, match_count integer default 3)
 returns table (
   id uuid,
@@ -292,42 +187,16 @@ as $$
   limit greatest(match_count, 1);
 $$;
 
--- Allow authenticated users (and the service role) to call it.
 grant execute on function public.match_lessons(text, integer) to authenticated, service_role;
 
--- >>>>>>>>>>>>>>>>>>>>>>>>>>>>  0004_launch_ops.sql  <<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
--- ============================================================================
--- Phase 10 — Launch ops: remote config, kill-switches & user feedback
--- ============================================================================
--- Two capabilities we need the day we go live:
---   1. app_config    — a single remote-config row the app reads on launch:
---                       feature flags / kill-switches (turn Coach or the
---                       paywall off instantly) + staged-rollout percentages +
---                       a force-update floor. No app rebuild required to pull
---                       any of these levers.
---   2. user_feedback — an in-app feedback inbox so we hear about launch-day
---                       problems (bad Arabic, bugs, ideas) directly from users.
--- ============================================================================
-
--- ----------------------------------------------------------------------------
--- app_config: exactly one row (id = 1). World-readable to every authenticated
--- user; writable only from the Supabase dashboard / service role (no client
--- write policy → the anon/auth key cannot flip your own kill-switches).
--- ----------------------------------------------------------------------------
 create table if not exists public.app_config (
   id                    integer primary key default 1,
-  -- JSON blob matching AppConfig['flags'] in src/lib/featureFlags.ts, e.g.
-  --   { "coach": { "enabled": true, "rolloutPercentage": 25 } }
   flags                 jsonb   not null default '{}'::jsonb,
-  -- Builds older than this see the "update required" screen. '' = never block.
   min_supported_version text    not null default '',
   updated_at            timestamptz not null default now(),
-  -- Enforce the single-row invariant.
   constraint app_config_singleton check (id = 1)
 );
 
--- Seed the singleton row with everything ON (safe defaults; see DEFAULT_CONFIG).
 insert into public.app_config (id, flags, min_supported_version)
 values (
   1,
@@ -338,16 +207,11 @@ on conflict (id) do nothing;
 
 alter table public.app_config enable row level security;
 
--- Readable by any logged-in user; no write policy = clients can't modify it.
 create policy "app_config readable by all authenticated"
   on public.app_config for select
   to authenticated
   using (true);
 
--- ----------------------------------------------------------------------------
--- user_feedback: each user can insert and read only their OWN feedback.
--- We (staff) read the whole table from the dashboard via the service role.
--- ----------------------------------------------------------------------------
 create table if not exists public.user_feedback (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references public.users(id) on delete cascade,
@@ -373,26 +237,8 @@ create policy "feedback select own"
   to authenticated
   using (auth.uid() = user_id);
 
--- >>>>>>>>>>>>>>>>>>>>>>>>>>>>  0005_complete_lesson_rpc.sql  <<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
--- ============================================================================
--- Phase 11 — Server-authoritative lesson completion
--- ============================================================================
--- Until now the CLIENT computed XP and streaks and wrote them directly; RLS
--- verified row ownership but not value honesty, so a tampered client could set
--- total_xp = 999999. This migration moves the whole completion sequence into
--- one atomic SECURITY DEFINER function and revokes the client's direct write
--- access to xp / streaks / lesson_progress. The client now has exactly one way
--- to earn rewards: rpc('complete_lesson', ...), and the server does the math.
---
--- The streak rules are a 1:1 port of the tested state machine in
--- src/lib/streak.ts (same-day no-op / next-day increment / missed-day reset).
--- ============================================================================
-
 create or replace function public.complete_lesson(
   p_lesson_id uuid,
-  -- The calendar day the completion credits (offline replays pass the day the
-  -- user actually completed, so a delayed sync still credits correctly).
   p_completed_day date default current_date
 )
 returns jsonb
@@ -415,7 +261,6 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  -- Clamp the credited day: never in the future (client clock skew / tampering).
   v_day := least(coalesce(p_completed_day, current_date), current_date);
 
   select id, track_id, day_number into v_lesson
@@ -424,9 +269,6 @@ begin
     raise exception 'lesson not found' using errcode = 'P0002';
   end if;
 
-  -- Idempotency: completing an already-completed lesson must not re-award
-  -- XP or advance the streak (the old client code relied on a disabled button;
-  -- the server now enforces it).
   select status into v_progress
   from public.lesson_progress
   where user_id = v_user_id and lesson_id = p_lesson_id;
@@ -444,13 +286,11 @@ begin
     );
   end if;
 
-  -- 1. Mark completed.
   insert into public.lesson_progress (user_id, lesson_id, status, completed_at)
   values (v_user_id, p_lesson_id, 'completed', now())
   on conflict (user_id, lesson_id)
   do update set status = 'completed', completed_at = now();
 
-  -- 2. Award XP atomically (no read-then-write race).
   update public.xp
   set total_xp = total_xp + 10
   where user_id = v_user_id
@@ -460,9 +300,6 @@ begin
     returning total_xp into v_new_xp;
   end if;
 
-  -- 3. Advance the streak — port of src/lib/streak.ts advanceStreak():
-  --    same day → no-op; consecutive day → +1; missed day / first ever /
-  --    backwards clock → reset to 1. longest_streak never decreases.
   select current_streak, longest_streak, last_active_date into v_streak
   from public.streaks where user_id = v_user_id for update;
   if not found then
@@ -489,7 +326,6 @@ begin
     update public.streaks
     set current_streak = v_new_current,
         longest_streak = v_new_longest,
-        -- Same-day repeat keeps the existing date; otherwise credit v_day.
         last_active_date = case
           when v_streak.last_active_date is not null and v_day - v_streak.last_active_date = 0
             then v_streak.last_active_date
@@ -498,8 +334,6 @@ begin
     where user_id = v_user_id;
   end if;
 
-  -- 4. Unlock the next day's lesson in the same track — but never downgrade a
-  --    lesson the user already completed.
   insert into public.lesson_progress (user_id, lesson_id, status)
   select v_user_id, l.id, 'available'
   from public.lessons l
@@ -521,41 +355,15 @@ $$;
 
 grant execute on function public.complete_lesson(uuid, date) to authenticated;
 
--- ----------------------------------------------------------------------------
--- Tighten RLS: reward tables become read-only for clients. All writes now go
--- through complete_lesson() (SECURITY DEFINER bypasses RLS internally).
--- ----------------------------------------------------------------------------
 drop policy if exists "progress insert own" on public.lesson_progress;
 drop policy if exists "progress update own" on public.lesson_progress;
 drop policy if exists "streaks update own"  on public.streaks;
 drop policy if exists "xp update own"       on public.xp;
 
--- >>>>>>>>>>>>>>>>>>>>>>>>>>>>  0006_coach_embeddings.sql  <<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
--- ============================================================================
--- Phase 13 — Semantic retrieval for the AI Coach (optional upgrade)
--- ============================================================================
--- Full-text search (0003) matches keywords; embeddings match MEANING — e.g.
--- "how do I make a good first impression?" finds "قوة الانطباع الأول" even
--- with zero shared words. This migration adds the storage + query function.
---
--- OPTIONAL-ON DESIGN: the coach Edge Function only uses semantic matching
--- when a VOYAGE_API_KEY secret is configured AND a lesson has an embedding;
--- otherwise it falls back to the existing FTS path. Running this migration
--- with no embeddings populated changes nothing about behavior.
---
--- Populate/refresh embeddings with: scripts/embed-lessons.ts (see
--- docs/phase-5-setup.md → Semantic retrieval).
--- ============================================================================
-
 create extension if not exists vector;
 
--- 1024 dims = Voyage AI's voyage-3 model (Anthropic's recommended partner).
 alter table public.lessons
   add column if not exists embedding vector(1024);
-
--- IVF/HNSW indexes only pay off at thousands of rows; a track catalog is tiny,
--- so exact scan is both simpler and faster here. Revisit if lessons > ~10k.
 
 create or replace function public.match_lessons_semantic(
   query_embedding vector(1024),
@@ -590,16 +398,6 @@ $$;
 grant execute on function public.match_lessons_semantic(vector, integer)
   to authenticated, service_role;
 
--- >>>>>>>>>>>>>>>>>>>>>>>>>>>>  0007_push_tokens.sql  <<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
--- ============================================================================
--- 0007 — Remote push notifications (Phase 15)
--- ============================================================================
--- Stores each device's Expo push token so the send-push Edge Function can
--- reach users who opted into notifications (win-back campaigns, announcements).
--- A user can have several rows (phone + tablet); tokens are unique per device.
--- ============================================================================
-
 create table if not exists public.push_tokens (
   token text primary key, -- ExponentPushToken[...] — unique per device install
   user_id uuid not null references public.users (id) on delete cascade,
@@ -611,9 +409,6 @@ create index if not exists push_tokens_user_id_idx on public.push_tokens (user_i
 
 alter table public.push_tokens enable row level security;
 
--- Own-rows only, for every operation: a user registers/refreshes/removes the
--- tokens of their own devices and can never see anyone else's. The send-push
--- Edge Function reads with the service role, which bypasses RLS.
 drop policy if exists "push_tokens_select_own" on public.push_tokens;
 create policy "push_tokens_select_own" on public.push_tokens
   for select using (auth.uid() = user_id);
@@ -629,16 +424,6 @@ create policy "push_tokens_update_own" on public.push_tokens
 drop policy if exists "push_tokens_delete_own" on public.push_tokens;
 create policy "push_tokens_delete_own" on public.push_tokens
   for delete using (auth.uid() = user_id);
-
--- >>>>>>>>>>>>>>>>>>>>>>>>>>>>  seed.sql  <<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
--- ============================================================================
--- Phase 2 — Seed data
--- ============================================================================
--- Inserts ONE track ("Communication & Charisma") and 7 placeholder lessons so
--- the rest of the app has real content to render during development.
--- Safe to re-run: uses a fixed track slug and ON CONFLICT guards.
--- ============================================================================
 
 insert into public.tracks (id, slug, title_ar, title_en, description_ar, description_en, "order")
 values (
@@ -677,11 +462,6 @@ values
    'text', 6, 7)
 on conflict (track_id, day_number) do nothing;
 
--- ============================================================================
--- Phase 14 — Second track: Self-Confidence (الثقة بالنفس)
--- Same ON CONFLICT guards; safe to re-run on an existing database.
--- ============================================================================
-
 insert into public.tracks (id, slug, title_ar, title_en, description_ar, description_en, "order")
 values (
   '22222222-2222-2222-2222-222222222222',
@@ -718,3 +498,4 @@ values
    'في الختام نجمع الأدوات: حوار داخلي منصف، إنجازات صغيرة متراكمة، مواجهة تدريجية للمخاوف، وحدود واضحة. ضع خطة أسبوع واحد تطبّق فيها أداة واحدة يومياً — الثقة عادة تُمارس، لا شعور يُنتظر.',
    'text', 6, 7)
 on conflict (track_id, day_number) do nothing;
+

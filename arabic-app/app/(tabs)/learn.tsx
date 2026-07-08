@@ -7,6 +7,7 @@ import { useFeatureFlag } from '../../src/hooks/useAppConfig';
 import { useTrackData } from '../../src/hooks/useTrackData';
 import { useSelectedTrack } from '../../src/hooks/useSelectedTrack';
 import { shouldShowPaywall } from '../../src/lib/entitlements';
+import { isPurchasesConfigured } from '../../src/lib/purchases';
 import type { LessonWithProgress, Track } from '../../src/types/database';
 import { colors, spacing, typography, radius } from '../../src/theme';
 
@@ -15,12 +16,12 @@ export default function LearnScreen() {
   const router = useRouter();
   const { session } = useAuth();
   const { isSubscribed } = useSubscription();
-  const paywallEnabled = useFeatureFlag('paywall');
+  const paywallActive = useFeatureFlag('paywall') && isPurchasesConfigured();
   const { track, tracks, lessons, isLoading, isError } = useTrackData(session?.user.id);
   const selectTrack = useSelectedTrack((s) => s.select);
 
   const openLesson = (lesson: LessonWithProgress) => {
-    if (paywallEnabled && shouldShowPaywall(lesson, isSubscribed)) {
+    if (paywallActive && shouldShowPaywall(lesson, isSubscribed)) {
       router.push('/paywall');
     } else {
       router.push(`/lesson/${lesson.id}`);

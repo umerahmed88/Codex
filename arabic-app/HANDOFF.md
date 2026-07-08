@@ -10,7 +10,7 @@ bite-sized personal-development lessons (Communication & Charisma track), an AI
 "ask-the-coach" Q&A grounded strictly in the lesson content, a streak/XP
 gamification loop, and a subscription paywall. RTL-first, Arabic primary.
 
-**Stack:** Expo (SDK 57) + React Native + TypeScript (strict) · Expo Router ·
+**Stack:** Expo (SDK 54) + React Native + TypeScript (strict) · Expo Router ·
 Supabase (Postgres + Auth) · React Query · Zustand · RevenueCat (IAP) ·
 Sentry · Claude API (`claude-opus-4-8`) via a Supabase Edge Function.
 
