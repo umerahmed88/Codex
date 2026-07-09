@@ -29,6 +29,7 @@
   },
   "learn": {
     "title": "Your Lessons",
+    "day": "Day {{day}}",
     "locked": "Locked",
     "available": "Available",
     "completed": "Completed",
@@ -68,7 +69,17 @@
     "xpOf": "{{current}} / {{next}} XP",
     "celebrate": "Awesome!",
     "nextMilestone": "{{count}} days to your next milestone",
-    "longest": "Longest streak: {{count}}"
+    "longest": "Longest streak: {{count}}",
+    "milestones": {
+      "d3": "Three days in a row!",
+      "d7": "A full week — well done!",
+      "d14": "Two weeks of consistency",
+      "d30": "A whole month — amazing!"
+    }
+  },
+  "notifications": {
+    "title": "RiseGuide",
+    "reminderBody": "Today's lesson is waiting for you"
   },
   "paywall": {
     "title": "Unlock all lessons",

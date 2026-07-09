@@ -29,6 +29,7 @@
   },
   "learn": {
     "title": "دروسك",
+    "day": "اليوم {{day}}",
     "locked": "مقفل",
     "available": "متاح",
     "completed": "مكتمل",
@@ -68,7 +69,17 @@
     "xpOf": "{{current}} / {{next}} نقطة",
     "celebrate": "رائع!",
     "nextMilestone": "باقٍ {{count}} أيام للإنجاز التالي",
-    "longest": "أطول سلسلة: {{count}}"
+    "longest": "أطول سلسلة: {{count}}",
+    "milestones": {
+      "d3": "ثلاثة أيام متتالية!",
+      "d7": "أسبوع كامل! أحسنت",
+      "d14": "أسبوعان من الاستمرار",
+      "d30": "شهر كامل! إنجاز رائع"
+    }
+  },
+  "notifications": {
+    "title": "رايز غايد",
+    "reminderBody": "درس اليوم بانتظارك"
   },
   "paywall": {
     "title": "افتح كل الدروس",

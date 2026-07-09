@@ -6,6 +6,7 @@ import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useFeatureFlag } from '../../src/hooks/useAppConfig';
 import { useTrackData } from '../../src/hooks/useTrackData';
 import { useSelectedTrack } from '../../src/hooks/useSelectedTrack';
+import { useFormatNumber } from '../../src/hooks/useFormatNumber';
 import { trackTitle } from '../../src/lib/tracks';
 import { shouldShowPaywall } from '../../src/lib/entitlements';
 import { isPurchasesConfigured } from '../../src/lib/purchases';
@@ -85,6 +86,7 @@ export default function LearnScreen() {
 
 function LessonRow({ lesson, onPress }: { lesson: LessonWithProgress; onPress: () => void }) {
   const { t } = useTranslation();
+  const fmt = useFormatNumber();
   const locked = lesson.status === 'locked';
 
   const badge =
@@ -102,7 +104,7 @@ function LessonRow({ lesson, onPress }: { lesson: LessonWithProgress; onPress: (
     >
       <View style={styles.rowMain}>
         <Text style={[styles.rowTitle, locked && styles.textLocked]}>{lesson.title_ar}</Text>
-        <Text style={styles.rowDay}>{`اليوم ${lesson.day_number}`}</Text>
+        <Text style={styles.rowDay}>{t('learn.day', { day: fmt(lesson.day_number) })}</Text>
       </View>
       <Text style={[styles.badge, { color: badge.color }]}>
         {badge.icon} {badge.label}

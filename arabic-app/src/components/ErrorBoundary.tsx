@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import i18n from '@/lib/i18n';
 import { colors, spacing, typography, radius } from '@/theme';
 
 interface Props {
@@ -40,11 +41,14 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
     return (
       <View style={styles.container}>
+        {/* Class component can't use the useTranslation hook — read the i18n
+            instance directly. Language is restored at boot, so it's correct by
+            the time any error renders. */}
         <Text style={styles.emoji}>⚠️</Text>
-        <Text style={styles.title}>حدث خطأ ما</Text>
-        <Text style={styles.subtitle}>نعتذر، حدث خطأ غير متوقع.</Text>
+        <Text style={styles.title}>{i18n.t('error.title')}</Text>
+        <Text style={styles.subtitle}>{i18n.t('error.subtitle')}</Text>
         <Pressable style={styles.button} onPress={this.handleRetry}>
-          <Text style={styles.buttonText}>إعادة المحاولة</Text>
+          <Text style={styles.buttonText}>{i18n.t('error.retry')}</Text>
         </Pressable>
       </View>
     );

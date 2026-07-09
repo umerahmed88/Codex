@@ -5,6 +5,7 @@
 // ============================================================================
 import { useEffect, useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '../lib/i18n';
 import { scheduleDailyReminder, cancelDailyReminder } from '../lib/notifications';
 
 const STORAGE_KEY = 'settings:daily-reminder';
@@ -16,7 +17,6 @@ export interface ReminderSettings {
 }
 
 const DEFAULT: ReminderSettings = { enabled: false, hour: 20, minute: 0 };
-const REMINDER_BODY = 'درس اليوم بانتظارك';
 
 export function useNotificationSettings() {
   const [settings, setSettings] = useState<ReminderSettings>(DEFAULT);
@@ -40,7 +40,9 @@ export function useNotificationSettings() {
   const update = useCallback(async (next: ReminderSettings): Promise<boolean> => {
     let effective = next;
     if (next.enabled) {
-      const ok = await scheduleDailyReminder(next.hour, next.minute, REMINDER_BODY);
+      // Localized at schedule time; if the user changes language, toggling the
+      // reminder reschedules it in the new language.
+      const ok = await scheduleDailyReminder(next.hour, next.minute, i18n.t('notifications.reminderBody'));
       if (!ok) {
         // Permission denied — don't pretend it's on.
         effective = { ...next, enabled: false };

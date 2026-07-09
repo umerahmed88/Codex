@@ -37,7 +37,7 @@ export function MilestoneCelebration({
       <Pressable style={styles.backdrop} onPress={onDismiss}>
         <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
           <Text style={styles.emoji}>{milestone.emoji}</Text>
-          <Text style={styles.title}>{milestone.title_ar}</Text>
+          <Text style={styles.title}>{t(milestone.titleKey)}</Text>
           <Pressable style={styles.button} onPress={onDismiss}>
             <Text style={styles.buttonText}>{t('gamify.celebrate')}</Text>
           </Pressable>

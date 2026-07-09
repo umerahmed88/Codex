@@ -8,16 +8,18 @@
 
 export interface Milestone {
   days: number;
-  title_ar: string;
+  // i18n key (resolved with t() at display time) so the title follows the
+  // app language instead of being hardcoded Arabic.
+  titleKey: string;
   emoji: string;
 }
 
 // Ordered thresholds. Extend this list to add more — the logic below adapts.
 export const MILESTONES: Milestone[] = [
-  { days: 3, title_ar: 'ثلاثة أيام متتالية!', emoji: '🌱' },
-  { days: 7, title_ar: 'أسبوع كامل! أحسنت', emoji: '🔥' },
-  { days: 14, title_ar: 'أسبوعان من الاستمرار', emoji: '⭐' },
-  { days: 30, title_ar: 'شهر كامل! إنجاز رائع', emoji: '🏆' },
+  { days: 3, titleKey: 'gamify.milestones.d3', emoji: '🌱' },
+  { days: 7, titleKey: 'gamify.milestones.d7', emoji: '🔥' },
+  { days: 14, titleKey: 'gamify.milestones.d14', emoji: '⭐' },
+  { days: 30, titleKey: 'gamify.milestones.d30', emoji: '🏆' },
 ];
 
 // Returns the milestone reached at EXACTLY this streak count, or null.
