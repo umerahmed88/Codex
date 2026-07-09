@@ -31,7 +31,34 @@ kill-switches, force-update, in-app feedback).
   Arabic-Indic numerals + WCAG AA contrast fixes (with regression tests);
   data-ops runbook.
 
-**Tests:** 125 passing (logic + component). `tsc` clean, `lint` clean.
+### UI/UX overhaul (Phases U0–U4) — Duolingo-style redesign
+- **U0 — Design preview**: interactive HTML mockup (Artifact) approved before
+  any RN work — new palette, mascot concept, Today hero, winding path,
+  celebration.
+- **U1 — Foundation**: animation stack (Reanimated 4 + worklets, gesture-handler,
+  svg, haptics, expo-audio, moti) on Expo Go SDK 54; `babel.config.js` with the
+  worklets plugin; `GestureHandlerRootView` root. **Lumi palette** (teal-green
+  primary, cream bg, purple, amber/gold XP, coral streak) — WCAG AA verified.
+  New primitives: `Lumi` (animated mascot, swap-ready for real PNG sprites),
+  `PressableScale` (bouncy press + haptic), `Confetti`, `AnimatedCounter`,
+  `src/lib/fx.ts` (haptics + bundled synthesized WAV SFX).
+- **U2 — Flagship screens**: Today hero (Lumi wave + XP count-up + bouncy CTA);
+  Learn winding lesson path (RTL-aware alternating nodes, done/current/locked,
+  Lumi beside the current node, colorful track pills).
+- **U3 — Celebrations & micro-interactions**: full-screen `CelebrationOverlay`
+  on every lesson complete (confetti + Lumi celebrate + XP/streak chips + sound
+  + haptic; milestone adds fanfare); animated tab bar (icon bounce on focus);
+  Lumi on onboarding.
+- **U4 — Polish & verify**: `useReducedMotion` honored across all animations;
+  full bilingual i18n (milestones, notifications, error boundary, learn-path
+  labels all localized); final tsc/tests/lint/export green.
+
+**Security:** migration `0008_security_hardening.sql` closes the
+client-forgeable `subscription_status` hole, blocks XP farming on locked
+lessons, and fixes offline-replay / non-UTC streak math (**user must run it**).
+
+**Tests:** 138 passing (logic + component). `tsc` clean, `lint` clean, iOS
+bundle exports (runs in Expo Go).
 
 ## Deferred (intentionally not built)
 

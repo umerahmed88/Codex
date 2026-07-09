@@ -42,7 +42,29 @@ Sentry · Claude API (`claude-opus-4-8`) via a Supabase Edge Function.
 
 **Improvement roadmap COMPLETE.** See `ROADMAP.md` for the done/deferred summary.
 
-**Tests:** `npm test` → 125 passing (logic + component projects). `npx tsc --noEmit` clean. `npm run lint` clean.
+**UI/UX overhaul (Phases U0–U4) — Duolingo-style redesign, COMPLETE:**
+
+| Phase | What | Status |
+|-------|------|--------|
+| U0 | Design preview (HTML Artifact, approved) | ✅ |
+| U1 | Animation stack + Lumi palette + primitives (`Lumi`, `PressableScale`, `Confetti`, `AnimatedCounter`, `fx.ts`) | ✅ |
+| U2 | Flagship screens: Today hero + Learn winding path | ✅ |
+| U3 | Celebrations (`CelebrationOverlay`) + animated tab bar + onboarding Lumi | ✅ |
+| U4 | Polish: reduce-motion, full bilingual i18n, verify | ✅ |
+
+- **Animation stack** (all Expo Go SDK 54 safe): `react-native-reanimated ~4.1.1`
+  + `react-native-worklets 0.5.1` (needs `react-native-worklets/plugin` in
+  `babel.config.js`), `react-native-gesture-handler`, `react-native-svg`,
+  `expo-haptics`, `expo-audio`, `moti`. Root wrapped in `GestureHandlerRootView`.
+- **Lumi** (`src/components/Lumi.tsx`) is the mascot — currently an animated SVG
+  placeholder in Lumi's palette. **Swap-ready for real art:** set
+  `USE_REAL_ART = true` and drop transparent PNG sprites into `assets/lumi/`
+  (idle / wave / celebrate at minimum). The `<Lumi state=... size=.../>` API
+  never changes, so no call sites need editing.
+- Theme is the **Lumi palette** (`src/theme/index.ts`); all pairs WCAG-AA
+  verified in `src/__tests__/contrast.test.ts`.
+
+**Tests:** `npm test` → 138 passing (logic + component projects). `npx tsc --noEmit` clean. `npm run lint` clean. `npx expo export --platform ios` bundles.
 
 ## Repo layout
 
