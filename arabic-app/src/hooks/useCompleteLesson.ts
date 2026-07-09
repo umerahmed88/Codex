@@ -30,8 +30,15 @@ export function useCompleteLesson() {
       return completeLessonWrites({ userId, lesson, trackLessons, completedDay });
     },
 
-    onError: async (_err, variables) => {
-      // Offline (or transient failure): remember it so it syncs on reconnect.
+    onError: async (err, variables) => {
+      // Only queue for retry when the request never reached the server (offline
+      // / network). A server rejection carries a Postgres error code (e.g.
+      // 'lesson is locked', auth) — queuing that would retry a doomed call on
+      // every foreground forever, so we drop it instead.
+      const code = (err as { code?: unknown })?.code;
+      const isServerRejection = typeof code === 'string' && code.length > 0;
+      if (isServerRejection) return;
+
       await enqueueCompletion(AsyncStorage, {
         lessonId: variables.lesson.id,
         completedDay: toDayString(new Date()),

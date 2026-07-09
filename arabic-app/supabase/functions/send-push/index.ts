@@ -26,9 +26,10 @@ const CHUNK_SIZE = 100; // Expo's max messages per request
 Deno.serve(async (req: Request) => {
   try {
     // --- Shared-secret auth (constant secret, not a user JWT) ---------------
+    // Compared in constant time to avoid a timing side-channel on the secret.
     const secret = Deno.env.get('SEND_PUSH_SECRET');
-    const auth = req.headers.get('Authorization');
-    if (!secret || auth !== `Bearer ${secret}`) {
+    const auth = req.headers.get('Authorization') ?? '';
+    if (!secret || !(await secretEquals(auth, `Bearer ${secret}`))) {
       return json({ error: 'unauthorized' }, 401);
     }
 
@@ -101,4 +102,19 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+// Constant-time secret comparison (SHA-256 digests → XOR); avoids leaking the
+// secret or its length through response timing.
+async function secretEquals(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const [ha, hb] = await Promise.all([
+    crypto.subtle.digest('SHA-256', enc.encode(a)),
+    crypto.subtle.digest('SHA-256', enc.encode(b)),
+  ]);
+  const va = new Uint8Array(ha);
+  const vb = new Uint8Array(hb);
+  let diff = 0;
+  for (let i = 0; i < va.length; i++) diff |= va[i] ^ vb[i];
+  return diff === 0;
 }

@@ -32,9 +32,11 @@ Deno.serve(async (req: Request) => {
   }
 
   // Shared-secret auth: RevenueCat sends the configured value verbatim in the
-  // Authorization header. Constant string compare is fine for a random secret.
+  // Authorization header. Compared in constant time (SHA-256 digests) to avoid
+  // any timing side-channel.
   const secret = Deno.env.get('REVENUECAT_WEBHOOK_SECRET');
-  if (!secret || req.headers.get('Authorization') !== secret) {
+  const provided = req.headers.get('Authorization') ?? '';
+  if (!secret || !(await secretEquals(provided, secret))) {
     return new Response('unauthorized', { status: 401 });
   }
 
@@ -80,4 +82,19 @@ function json(body: unknown, status: number): Response {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+// Constant-time secret comparison: hash both sides to a fixed length, then XOR.
+// Avoids leaking the secret (or its length) through response timing.
+async function secretEquals(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const [ha, hb] = await Promise.all([
+    crypto.subtle.digest('SHA-256', enc.encode(a)),
+    crypto.subtle.digest('SHA-256', enc.encode(b)),
+  ]);
+  const va = new Uint8Array(ha);
+  const vb = new Uint8Array(hb);
+  let diff = 0;
+  for (let i = 0; i < va.length; i++) diff |= va[i] ^ vb[i];
+  return diff === 0;
 }

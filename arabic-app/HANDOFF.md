@@ -89,8 +89,13 @@ npx expo start --tunnel        # scan QR with Expo Go
 
 These need YOUR accounts and can't be done from code:
 
+- [ ] **🔒 SECURITY — run `supabase/migrations/0008_security_hardening.sql`** in
+      the SQL Editor now. It closes a critical hole (any client could self-grant
+      `subscription_status='active'`), stops XP farming on locked lessons, and
+      fixes the streak math for offline replays + non-UTC timezones. Safe to run
+      on the existing DB (create-or-replace only).
 - [ ] **Supabase project** — create it, then run `supabase/migrations/0001`
-      through `0006`, and `seed.sql`, in order, in the SQL Editor.
+      through `0008`, and `seed.sql`, in order, in the SQL Editor.
       (A Supabase platform OUTAGE was blocking the SQL Editor as of last session
       — check https://status.supabase.com; it's temporary, not our bug.)
 - [ ] **`.env.local`** — set `EXPO_PUBLIC_SUPABASE_URL` + `_ANON_KEY`
