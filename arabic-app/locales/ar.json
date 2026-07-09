@@ -25,7 +25,9 @@
     "completed": "تم الإكمال ✓",
     "xpEarned": "+{{xp}} نقطة",
     "completing": "جارٍ الحفظ...",
-    "savedOffline": "سيُحفظ تقدّمك عند عودة الاتصال."
+    "savedOffline": "سيُحفظ تقدّمك عند عودة الاتصال.",
+    "wellDone": "أحسنت!",
+    "continue": "التالي"
   },
   "learn": {
     "title": "دروسك",

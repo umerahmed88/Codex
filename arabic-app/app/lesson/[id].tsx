@@ -12,7 +12,7 @@ import { shouldShowPaywall } from '../../src/lib/entitlements';
 import { isPurchasesConfigured } from '../../src/lib/purchases';
 import { milestoneForStreak, type Milestone } from '../../src/lib/milestones';
 import { Button } from '../../src/components/Button';
-import { MilestoneCelebration } from '../../src/components/MilestoneCelebration';
+import { CelebrationOverlay } from '../../src/components/CelebrationOverlay';
 import { colors, spacing, typography } from '../../src/theme';
 
 export default function LessonPlayerScreen() {
@@ -28,7 +28,11 @@ export default function LessonPlayerScreen() {
   const { data: streak } = useStreak(userId);
   const { data: xp } = useXp(userId);
   const complete = useCompleteLesson();
-  const [milestone, setMilestone] = useState<Milestone | null>(null);
+  const [celebration, setCelebration] = useState<{
+    xp: number;
+    streak: number;
+    milestone: Milestone | null;
+  } | null>(null);
 
   const merged = lessons.find((l) => l.id === id);
   const raw = rawLessons?.find((l) => l.id === id);
@@ -77,13 +81,9 @@ export default function LessonPlayerScreen() {
       },
       {
         onSuccess: (data) => {
-          // Celebrate if this completion hit a milestone; otherwise go back.
-          const hit = milestoneForStreak(data.nextStreak.current_streak);
-          if (hit) {
-            setMilestone(hit);
-          } else {
-            router.back();
-          }
+          // Every completion celebrates (+10 XP); a milestone adds the fanfare.
+          const newStreak = data.nextStreak.current_streak;
+          setCelebration({ xp: 10, streak: newStreak, milestone: milestoneForStreak(newStreak) });
         },
       }
     );
@@ -126,10 +126,13 @@ export default function LessonPlayerScreen() {
         </View>
       </View>
 
-      <MilestoneCelebration
-        milestone={milestone}
+      <CelebrationOverlay
+        visible={!!celebration}
+        xpGained={celebration?.xp ?? 0}
+        streak={celebration?.streak ?? 0}
+        milestone={celebration?.milestone ?? null}
         onDismiss={() => {
-          setMilestone(null);
+          setCelebration(null);
           router.back();
         }}
       />

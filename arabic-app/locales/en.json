@@ -25,7 +25,9 @@
     "completed": "Completed ✓",
     "xpEarned": "+{{xp}} XP",
     "completing": "Saving...",
-    "savedOffline": "Your progress will save when you're back online."
+    "savedOffline": "Your progress will save when you're back online.",
+    "wellDone": "Well done!",
+    "continue": "Continue"
   },
   "learn": {
     "title": "Your Lessons",
