@@ -2,6 +2,9 @@ import '../src/lib/i18n'; // must be first
 import { initSentry } from '../src/lib/sentry';
 import { useEffect } from 'react';
 import { I18nManager, View } from 'react-native';
+// Importing GestureHandlerRootView also loads the gesture-handler module
+// (its side effects) — no separate bare import needed.
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { OfflineBanner } from '../src/components/OfflineBanner';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
@@ -107,25 +110,27 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <ErrorBoundary>
-      <PersistQueryClientProvider
-        client={queryClient}
-        persistOptions={{
-          persister: asyncStoragePersister,
-          maxAge: 1000 * 60 * 60 * 24, // 24h — matches gcTime above
-          dehydrateOptions: {
-            shouldDehydrateQuery: (query) =>
-              PERSISTED_QUERY_KEYS.includes(query.queryKey[0] as string),
-          },
-        }}
-      >
-        <AuthProvider>
-          <SubscriptionProvider>
-            <StatusBar style="light" />
-            <AuthGate />
-          </SubscriptionProvider>
-        </AuthProvider>
-      </PersistQueryClientProvider>
-    </ErrorBoundary>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ErrorBoundary>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{
+            persister: asyncStoragePersister,
+            maxAge: 1000 * 60 * 60 * 24, // 24h — matches gcTime above
+            dehydrateOptions: {
+              shouldDehydrateQuery: (query) =>
+                PERSISTED_QUERY_KEYS.includes(query.queryKey[0] as string),
+            },
+          }}
+        >
+          <AuthProvider>
+            <SubscriptionProvider>
+              <StatusBar style="light" />
+              <AuthGate />
+            </SubscriptionProvider>
+          </AuthProvider>
+        </PersistQueryClientProvider>
+      </ErrorBoundary>
+    </GestureHandlerRootView>
   );
 }
