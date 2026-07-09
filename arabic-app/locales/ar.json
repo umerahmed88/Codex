@@ -30,6 +30,7 @@
   "learn": {
     "title": "دروسك",
     "day": "اليوم {{day}}",
+    "here": "أنت هنا",
     "locked": "مقفل",
     "available": "متاح",
     "completed": "مكتمل",

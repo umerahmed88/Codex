@@ -1,16 +1,21 @@
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/lib/AuthProvider';
 import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useFeatureFlag } from '../../src/hooks/useAppConfig';
 import { useTrackData } from '../../src/hooks/useTrackData';
-import { useStreak } from '../../src/hooks/useStreakXp';
+import { useStreak, useXp } from '../../src/hooks/useStreakXp';
 import { selectTodaysLesson } from '../../src/lib/lessonProgress';
 import { shouldShowPaywall } from '../../src/lib/entitlements';
 import { isPurchasesConfigured } from '../../src/lib/purchases';
 import { isStreakActive, toDayString } from '../../src/lib/streak';
+import { levelProgress } from '../../src/lib/xp';
 import { StreakBadge } from '../../src/components/StreakBadge';
+import { Lumi } from '../../src/components/Lumi';
+import { PressableScale } from '../../src/components/PressableScale';
+import { AnimatedCounter } from '../../src/components/AnimatedCounter';
 import type { LessonWithProgress } from '../../src/types/database';
 import { colors, spacing, typography, radius, shadows } from '../../src/theme';
 
@@ -21,14 +26,11 @@ export default function TodayScreen() {
   const userId = session?.user.id;
 
   const { isSubscribed } = useSubscription();
-  // Paywall is active only when its flag is on AND RevenueCat is actually
-  // configured. Kill-switch (billing outage) or missing keys → fail open to the
-  // content instead of diverting to a broken purchase screen.
   const paywallActive = useFeatureFlag('paywall') && isPurchasesConfigured();
   const { lessons, isLoading, isError } = useTrackData(userId);
   const { data: streak } = useStreak(userId);
+  const { data: xp } = useXp(userId);
 
-  // Open a lesson, or divert to the paywall if it's premium and locked behind it.
   const openLesson = (lesson: LessonWithProgress) => {
     if (paywallActive && shouldShowPaywall(lesson, isSubscribed)) {
       router.push('/paywall');
@@ -45,7 +47,6 @@ export default function TodayScreen() {
       </View>
     );
   }
-
   if (isError) {
     return (
       <View style={[styles.container, styles.centered]}>
@@ -56,33 +57,38 @@ export default function TodayScreen() {
 
   const todaysLesson = selectTodaysLesson(lessons);
   const nextLocked = lessons.find((l) => l.status === 'locked');
+  const streakState = streak ?? { current_streak: 0, longest_streak: 0, last_active_date: null };
+  const active = isStreakActive(streakState, toDayString(new Date()));
+  const totalXp = xp?.total_xp ?? 0;
+  const lvl = levelProgress(totalXp);
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.topRow}>
-        <Text style={styles.greeting}>{t('today.greeting')}</Text>
-        {streak && streak.current_streak > 0 && (
-          <StreakBadge
-            count={streak.current_streak}
-            active={isStreakActive(streak, toDayString(new Date()))}
-          />
+        <Text style={styles.title}>{t('today.title')}</Text>
+        {streakState.current_streak > 0 && (
+          <StreakBadge count={streakState.current_streak} active={active} />
         )}
       </View>
-      <Text style={styles.title}>{t('today.title')}</Text>
 
       {todaysLesson ? (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{todaysLesson.title_ar}</Text>
-          <Text style={styles.cardMeta}>{t('today.minutes', { count: todaysLesson.est_minutes })}</Text>
-          <Pressable
-            style={styles.startButton}
-            onPress={() => openLesson(todaysLesson)}
-          >
-            <Text style={styles.startButtonText}>{t('today.start')}</Text>
-          </Pressable>
-        </View>
+        <Animated.View entering={FadeInDown.duration(500)} style={styles.hero}>
+          <View style={styles.heroBlob} />
+          <View style={styles.heroTop}>
+            <Lumi state="wave" size={92} />
+            <View style={styles.bubble}>
+              <Text style={styles.bubbleText}>{t('today.greeting')} ✨</Text>
+            </View>
+          </View>
+          <Text style={styles.heroTitle}>{todaysLesson.title_ar}</Text>
+          <Text style={styles.heroMeta}>{t('today.minutes', { count: todaysLesson.est_minutes })}</Text>
+          <PressableScale style={styles.cta} onPress={() => openLesson(todaysLesson)}>
+            <Text style={styles.ctaText}>{t('today.start')}</Text>
+          </PressableScale>
+        </Animated.View>
       ) : (
-        <View style={styles.card}>
+        <Animated.View entering={FadeInDown.duration(500)} style={[styles.hero, styles.heroDone]}>
+          <Lumi state="celebrate" size={104} />
           <Text style={styles.doneText}>{t('today.allDone')}</Text>
           {nextLocked && (
             <>
@@ -90,19 +96,30 @@ export default function TodayScreen() {
               <Text style={styles.previewTitle}>{nextLocked.title_ar}</Text>
             </>
           )}
-        </View>
+        </Animated.View>
       )}
-    </View>
+
+      {/* XP / level card */}
+      <Animated.View entering={FadeIn.delay(200).duration(500)} style={styles.xpCard}>
+        <View style={styles.xpTop}>
+          <Text style={styles.level}>{t('gamify.level', { level: lvl.level })}</Text>
+          <View style={styles.xpNums}>
+            <AnimatedCounter value={totalXp} style={styles.xpValue} />
+            <Text style={styles.xpOf}>{` / ${lvl.nextLevelXp}`}</Text>
+          </View>
+        </View>
+        <View style={styles.xpBar}>
+          <View style={[styles.xpFill, { width: `${Math.round(Math.max(0, Math.min(1, lvl.progress)) * 100)}%` }]} />
+        </View>
+      </Animated.View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-  },
-  centered: { alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   muted: {
     fontFamily: typography.fontFamily.arabic,
     fontSize: typography.size.sm,
@@ -119,70 +136,132 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.xs,
-  },
-  greeting: {
-    fontFamily: typography.fontFamily.arabic,
-    fontSize: typography.size.md,
-    color: colors.textSecondary,
-    textAlign: 'right',
+    marginBottom: spacing.lg,
   },
   title: {
     fontFamily: typography.fontFamily.arabicBold,
     fontSize: typography.size.xxl,
     color: colors.textPrimary,
     textAlign: 'right',
-    marginBottom: spacing.lg,
   },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+  hero: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.xl,
     padding: spacing.lg,
+    overflow: 'hidden',
     ...shadows.md,
   },
-  cardTitle: {
-    fontFamily: typography.fontFamily.arabicBold,
-    fontSize: typography.size.lg,
-    color: colors.textPrimary,
-    textAlign: 'right',
-    marginBottom: spacing.xs,
+  heroBlob: {
+    position: 'absolute',
+    top: -40,
+    left: -30,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: colors.primaryLight,
+    opacity: 0.5,
   },
-  cardMeta: {
+  heroDone: { alignItems: 'center', gap: spacing.sm },
+  heroTop: { flexDirection: 'row-reverse', alignItems: 'flex-end', gap: spacing.md },
+  bubble: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderColor: 'rgba(255,255,255,0.28)',
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    borderBottomRightRadius: 4,
+    padding: spacing.md,
+  },
+  bubbleText: {
+    fontFamily: typography.fontFamily.arabicSemiBold,
+    fontSize: typography.size.sm,
+    color: colors.textInverse,
+    textAlign: 'right',
+  },
+  heroTitle: {
+    fontFamily: typography.fontFamily.arabicBold,
+    fontSize: typography.size.xl,
+    color: colors.textInverse,
+    textAlign: 'right',
+    marginTop: spacing.lg,
+  },
+  heroMeta: {
     fontFamily: typography.fontFamily.arabic,
     fontSize: typography.size.sm,
-    color: colors.textMuted,
+    color: 'rgba(255,255,255,0.85)',
     textAlign: 'right',
-    marginBottom: spacing.md,
+    marginTop: spacing.xs,
   },
-  startButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
+  cta: {
+    backgroundColor: colors.accent,
+    borderRadius: radius.lg,
     paddingVertical: spacing.md,
     alignItems: 'center',
+    marginTop: spacing.lg,
+    borderBottomWidth: 4,
+    borderBottomColor: '#CF8D15',
   },
-  startButtonText: {
-    fontFamily: typography.fontFamily.arabicSemiBold,
+  ctaText: {
+    fontFamily: typography.fontFamily.arabicBold,
     fontSize: typography.size.md,
-    color: colors.textInverse,
+    color: colors.primaryDark,
   },
   doneText: {
-    fontFamily: typography.fontFamily.arabicSemiBold,
-    fontSize: typography.size.md,
-    color: colors.success,
-    textAlign: 'right',
-    marginBottom: spacing.md,
+    fontFamily: typography.fontFamily.arabicBold,
+    fontSize: typography.size.lg,
+    color: colors.textInverse,
+    textAlign: 'center',
   },
   previewLabel: {
     fontFamily: typography.fontFamily.arabic,
     fontSize: typography.size.sm,
-    color: colors.textMuted,
-    textAlign: 'right',
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'center',
   },
   previewTitle: {
     fontFamily: typography.fontFamily.arabicSemiBold,
     fontSize: typography.size.md,
-    color: colors.textSecondary,
-    textAlign: 'right',
-    marginTop: spacing.xs,
+    color: colors.textInverse,
+    textAlign: 'center',
+  },
+  xpCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginTop: spacing.md,
+    ...shadows.sm,
+  },
+  xpTop: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  level: {
+    fontFamily: typography.fontFamily.arabicBold,
+    fontSize: typography.size.md,
+    color: colors.secondary,
+  },
+  xpNums: { flexDirection: 'row-reverse', alignItems: 'baseline' },
+  xpValue: {
+    fontFamily: typography.fontFamily.arabicBold,
+    fontSize: typography.size.md,
+    color: colors.gold,
+  },
+  xpOf: {
+    fontFamily: typography.fontFamily.arabic,
+    fontSize: typography.size.sm,
+    color: colors.textMuted,
+  },
+  xpBar: {
+    height: 14,
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceAlt,
+    overflow: 'hidden',
+  },
+  xpFill: {
+    height: '100%',
+    borderRadius: radius.full,
+    backgroundColor: colors.gold,
   },
 });

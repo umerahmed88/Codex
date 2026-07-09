@@ -30,6 +30,7 @@
   "learn": {
     "title": "Your Lessons",
     "day": "Day {{day}}",
+    "here": "You're here",
     "locked": "Locked",
     "available": "Available",
     "completed": "Completed",
