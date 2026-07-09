@@ -4,7 +4,7 @@
 // nothing (celebrations stay legible without motion). Uses Reanimated so the
 // fall runs on the UI thread.
 // ============================================================================
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -27,19 +27,39 @@ function rand(seed: number): number {
 
 export function Confetti({ count = 26, duration = 2200 }: { count?: number; duration?: number }) {
   const reduced = useReducedMotion();
+  // One dimensions subscription for the whole burst (not one per piece).
+  const { width, height } = useWindowDimensions();
   const pieces = useMemo(() => Array.from({ length: count }, (_, i) => i), [count]);
-  if (reduced) return null;
+  // Self-unmount after the pieces have settled so nothing lingers in the tree.
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setDone(true), duration + 800);
+    return () => clearTimeout(id);
+  }, [duration]);
+
+  if (reduced || done) return null;
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       {pieces.map((i) => (
-        <Piece key={i} index={i} count={count} duration={duration} />
+        <Piece key={i} index={i} count={count} duration={duration} width={width} height={height} />
       ))}
     </View>
   );
 }
 
-function Piece({ index, count, duration }: { index: number; count: number; duration: number }) {
-  const { width, height } = useWindowDimensions();
+function Piece({
+  index,
+  count,
+  duration,
+  width,
+  height,
+}: {
+  index: number;
+  count: number;
+  duration: number;
+  width: number;
+  height: number;
+}) {
   const y = useSharedValue(-24);
   const rot = useSharedValue(0);
 

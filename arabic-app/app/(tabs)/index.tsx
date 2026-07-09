@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeIn, useReducedMotion } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/lib/AuthProvider';
@@ -12,6 +12,7 @@ import { shouldShowPaywall } from '../../src/lib/entitlements';
 import { isPurchasesConfigured } from '../../src/lib/purchases';
 import { isStreakActive, toDayString } from '../../src/lib/streak';
 import { levelProgress } from '../../src/lib/xp';
+import { useFormatNumber } from '../../src/hooks/useFormatNumber';
 import { StreakBadge } from '../../src/components/StreakBadge';
 import { Lumi } from '../../src/components/Lumi';
 import { PressableScale } from '../../src/components/PressableScale';
@@ -22,6 +23,8 @@ import { colors, spacing, typography, radius, shadows } from '../../src/theme';
 export default function TodayScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const fmt = useFormatNumber();
+  const reduced = useReducedMotion();
   const { session } = useAuth();
   const userId = session?.user.id;
 
@@ -72,7 +75,7 @@ export default function TodayScreen() {
       </View>
 
       {todaysLesson ? (
-        <Animated.View entering={FadeInDown.duration(500)} style={styles.hero}>
+        <Animated.View entering={reduced ? undefined : FadeInDown.duration(500)} style={styles.hero}>
           <View style={styles.heroBlob} />
           <View style={styles.heroTop}>
             <Lumi state="wave" size={92} />
@@ -81,13 +84,13 @@ export default function TodayScreen() {
             </View>
           </View>
           <Text style={styles.heroTitle}>{todaysLesson.title_ar}</Text>
-          <Text style={styles.heroMeta}>{t('today.minutes', { count: todaysLesson.est_minutes })}</Text>
+          <Text style={styles.heroMeta}>{t('today.minutes', { count: fmt(todaysLesson.est_minutes) })}</Text>
           <PressableScale style={styles.cta} onPress={() => openLesson(todaysLesson)}>
             <Text style={styles.ctaText}>{t('today.start')}</Text>
           </PressableScale>
         </Animated.View>
       ) : (
-        <Animated.View entering={FadeInDown.duration(500)} style={[styles.hero, styles.heroDone]}>
+        <Animated.View entering={reduced ? undefined : FadeInDown.duration(500)} style={[styles.hero, styles.heroDone]}>
           <Lumi state="celebrate" size={104} />
           <Text style={styles.doneText}>{t('today.allDone')}</Text>
           {nextLocked && (
@@ -100,15 +103,23 @@ export default function TodayScreen() {
       )}
 
       {/* XP / level card */}
-      <Animated.View entering={FadeIn.delay(200).duration(500)} style={styles.xpCard}>
+      <Animated.View
+        entering={reduced ? undefined : FadeIn.delay(200).duration(500)}
+        style={styles.xpCard}
+      >
         <View style={styles.xpTop}>
-          <Text style={styles.level}>{t('gamify.level', { level: lvl.level })}</Text>
+          <Text style={styles.level}>{t('gamify.level', { level: fmt(lvl.level) })}</Text>
           <View style={styles.xpNums}>
             <AnimatedCounter value={totalXp} style={styles.xpValue} />
-            <Text style={styles.xpOf}>{` / ${lvl.nextLevelXp}`}</Text>
+            <Text style={styles.xpOf}>{` / ${fmt(lvl.nextLevelXp)}`}</Text>
           </View>
         </View>
-        <View style={styles.xpBar}>
+        <View
+          style={styles.xpBar}
+          accessibilityRole="progressbar"
+          accessibilityValue={{ min: 0, max: lvl.nextLevelXp, now: totalXp }}
+          accessibilityLabel={t('gamify.level', { level: fmt(lvl.level) })}
+        >
           <View style={[styles.xpFill, { width: `${Math.round(Math.max(0, Math.min(1, lvl.progress)) * 100)}%` }]} />
         </View>
       </Animated.View>

@@ -27,18 +27,24 @@ export function AnimatedCounter({ value, style, duration = 700 }: Props) {
       from.current = value;
       return;
     }
+    // requestAnimationFrame self-corrects to real frame time (vs setInterval,
+    // which accumulates ticks when the JS thread is briefly busy — e.g. during
+    // the Today screen's entrance animations).
     const start = from.current;
     const t0 = Date.now();
-    const id = setInterval(() => {
+    let raf = 0;
+    const tick = () => {
       const p = Math.min(1, (Date.now() - t0) / duration);
       const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
       setDisplay(Math.round(start + (value - start) * eased));
-      if (p >= 1) {
-        clearInterval(id);
+      if (p < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
         from.current = value;
       }
-    }, 16);
-    return () => clearInterval(id);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, [value, duration, reduced]);
 
   return <Text style={style}>{fmt(display)}</Text>;

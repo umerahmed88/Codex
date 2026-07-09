@@ -8,7 +8,7 @@
 // USE_REAL_ART to true and drop them into SPRITES below — every call site
 // (<Lumi state="wave" size={96} />) stays identical.
 // ============================================================================
-import { useEffect } from 'react';
+import { memo, useEffect } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Ellipse, Circle, Path, Polygon, G } from 'react-native-svg';
 import Animated, {
@@ -100,8 +100,10 @@ export function Lumi({ state = 'idle', size = 96, style }: Props) {
   return (
     <Animated.View
       style={[{ width: size, height: size * 1.1 }, animStyle, style]}
-      accessibilityRole="image"
-      accessibilityLabel="Lumi"
+      // Lumi is decorative — don't announce it to screen readers (it would read
+      // an untranslated "Lumi" repeatedly beside real content).
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
     >
       {USE_REAL_ART ? (
         // <Image source={SPRITES[state]} style={{ width: size, height: size * 1.1 }} resizeMode="contain" />
@@ -113,7 +115,7 @@ export function Lumi({ state = 'idle', size = 96, style }: Props) {
   );
 }
 
-// Star points for the belly badge.
+// Star points for the belly badge — the belly star is fixed, so compute once.
 function starPoints(cx: number, cy: number, r: number): string {
   const pts: string[] = [];
   for (let i = 0; i < 10; i++) {
@@ -123,8 +125,11 @@ function starPoints(cx: number, cy: number, r: number): string {
   }
   return pts.join(' ');
 }
+const BELLY_STAR = starPoints(50, 84, 11);
 
-function LumiArt({ state, size }: { state: LumiState; size: number }) {
+// memo: the SVG only changes when state/size change, never per animation frame
+// (the motion lives on the wrapper Animated.View).
+const LumiArt = memo(function LumiArt({ state, size }: { state: LumiState; size: number }) {
   const happy = state === 'celebrate' || state === 'wave';
   const sad = state === 'sad';
   return (
@@ -168,8 +173,8 @@ function LumiArt({ state, size }: { state: LumiState; size: number }) {
       {state === 'wave' && <Ellipse cx={84} cy={62} rx={7} ry={11} fill={colors.primary} />}
       {/* belly star */}
       <G>
-        <Polygon points={starPoints(50, 84, 11)} fill={colors.gold} />
+        <Polygon points={BELLY_STAR} fill={colors.gold} />
       </G>
     </Svg>
   );
-}
+});

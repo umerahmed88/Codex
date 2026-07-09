@@ -123,13 +123,27 @@ function PathNode({
 }) {
   const { t } = useTranslation();
   const fmt = useFormatNumber();
+  const reduced = useReducedMotion();
   const done = lesson.status === 'completed';
   const locked = lesson.status === 'locked';
   // Gentle left-right weave (deterministic, symmetric so RTL is unaffected).
   const offset = Math.round(Math.sin(index * 0.85) * 46);
 
+  // Announce the lesson state to screen readers (color/icon alone isn't enough).
+  const stateLabel = done
+    ? t('learn.completed')
+    : isCurrent
+      ? t('learn.here')
+      : locked
+        ? t('learn.locked')
+        : t('learn.available');
+  const nodeLabel = `${t('learn.day', { day: fmt(lesson.day_number) })} — ${stateLabel}`;
+
   return (
-    <Animated.View entering={FadeInDown.delay(Math.min(index * 60, 480)).duration(360)} style={styles.pathRow}>
+    <Animated.View
+      entering={reduced ? undefined : FadeInDown.delay(Math.min(index * 60, 480)).duration(360)}
+      style={styles.pathRow}
+    >
       <View style={[styles.nodeSlot, { transform: [{ translateX: offset }] }]}>
         {isCurrent && (
           <View style={styles.lumiBeside} pointerEvents="none">
@@ -147,7 +161,7 @@ function PathNode({
             isCurrent && styles.nodeCurrent,
             locked && styles.nodeLocked,
           ]}
-          accessibilityLabel={t('learn.day', { day: fmt(lesson.day_number) })}
+          accessibilityLabel={nodeLabel}
         >
           <Text style={[styles.nodeLabel, isCurrent && styles.nodeLabelCurrent, locked && styles.nodeLabelLocked]}>
             {done ? '✓' : locked ? '🔒' : fmt(lesson.day_number)}
@@ -210,7 +224,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    minHeight: 44, // accessible touch target
+    justifyContent: 'center',
   },
   trackChipSel: { backgroundColor: colors.primary, borderColor: colors.primary },
   trackChipText: {
