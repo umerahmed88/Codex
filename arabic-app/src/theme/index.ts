@@ -1,40 +1,57 @@
-// Design tokens — calm, trustworthy palette for a self-improvement brand
+// ============================================================================
+// Design tokens — "Lumi" identity: bright, playful, high-energy, drawn from the
+// mascot (teal skin, cream belly, purple scarf, gold star, coral spark).
+// Every colour is WCAG-AA verified for its real usage (see contrast.test.ts).
+// Existing keys are preserved so screens adopt the new look automatically.
+// ============================================================================
 export const colors = {
-  // Primary — deep navy (trust, depth)
-  primary: '#1A3A5C',
-  primaryLight: '#2E5F8F',
-  primaryDark: '#0F2338',
+  // Primary — Lumi teal (buttons, brand). Deep enough for white text @ AA.
+  primary: '#0A8571',
+  primaryLight: '#0A7E6C', // links & small buttons (legible on white AND white-on-it)
+  primaryDark: '#073F37', // pressed/depth + dark text on gold
 
-  // Accent — warm gold (achievement, reward)
-  accent: '#C9A84C',
-  accentLight: '#E8C96A',
+  // Accent — star gold (XP, rewards, highlights)
+  accent: '#F6B02E',
+  accentLight: '#FFCE6B',
 
-  // Neutrals
-  background: '#F7F4EF',
+  // Secondary — scarf purple (second track, secondary CTAs)
+  secondary: '#8A5CD1',
+  secondaryDark: '#5E3AA0',
+  secondaryLight: '#A98AE0',
+
+  // Neutrals — warm cream world
+  background: '#F4EAD0',
   surface: '#FFFFFF',
-  surfaceAlt: '#EEE9E0',
-  border: '#D9D1C4',
+  surfaceAlt: '#EFE3C6',
+  border: '#E4D6B2',
 
-  // Text
-  textPrimary: '#1A1A2E',
-  textSecondary: '#5A5A7A',
-  // Darkened for WCAG AA (Phase 16 a11y audit): the old #9A9AB0 was ~2.5:1 on
-  // our light backgrounds; #696985 clears 4.5:1 on background and surface.
-  textMuted: '#696985',
+  // Text — deep night-navy on cream
+  textPrimary: '#17233F',
+  textSecondary: '#45527E',
+  textMuted: '#5F6488',
   textInverse: '#FFFFFF',
 
   // Semantic
   success: '#2E8B57',
-  // Darkened for WCAG AA (Phase 16): #E8A020 failed both as text on light
-  // surfaces (2.2:1) AND as the OfflineBanner background under white text
-  // (2.2:1). #9A6400 clears 4.5:1 in every one of those usages.
-  warning: '#9A6400',
+  warning: '#8F5D00', // AA on the cream background + as the offline-banner bg
   error: '#C0392B',
   info: '#2E5F8F',
 
   // Gamification
-  streak: '#E85C0D',
-  xp: '#C9A84C',
+  streak: '#E8632A', // fire orange
+  xp: '#F6B02E', // gold
+
+  // Lumi palette extras (used by the redesigned screens/components)
+  mint: '#74E3C6',
+  coral: '#F26B6B',
+  gold: '#F6B02E',
+  navy: '#1B2A54',
+
+  // Per-track category accents (path nodes, track pills)
+  categoryTeal: '#0A8571',
+  categoryPurple: '#8A5CD1',
+  categoryCoral: '#E8632A',
+  categoryGold: '#F6B02E',
 } as const;
 
 export const spacing = {
@@ -61,35 +78,46 @@ export const typography = {
     xl: 24,
     xxl: 32,
     display: 40,
+    hero: 52, // big celebratory numbers/headers
   },
   lineHeight: {
     tight: 1.3,
-    normal: 1.6,  // generous for Arabic readability
+    normal: 1.6, // generous for Arabic readability
     relaxed: 1.8,
   },
 } as const;
 
+// Chunkier, more playful radii (Duolingo-style rounded cards + pills).
 export const radius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
+  sm: 10,
+  md: 14,
+  lg: 20,
+  xl: 28,
   full: 9999,
 } as const;
 
+// Playful "solid" depth: a soft drop shadow. Chunky 3D button depth is done
+// per-component with a solid bottom border/offset, not here.
 export const shadows = {
   sm: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowColor: '#3A2A10',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
     elevation: 2,
   },
   md: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: '#3A2A10',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.14,
+    shadowRadius: 14,
+    elevation: 5,
+  },
+  lg: {
+    shadowColor: '#3A2A10',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 9,
   },
 } as const;
