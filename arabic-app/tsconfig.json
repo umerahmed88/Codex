@@ -5,10 +5,25 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@/locales/*": ["locales/*"]
+      "@/*": [
+        "src/*"
+      ],
+      "@/locales/*": [
+        "locales/*"
+      ]
     },
-    "types": ["jest", "node"]
+    "types": [
+      "jest",
+      "node"
+    ]
   },
-  "exclude": ["supabase/functions"]
+  "exclude": [
+    "supabase/functions"
+  ],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
 }
