@@ -20,8 +20,16 @@ import { useOnboarding } from '../src/hooks/useOnboarding';
 import { UpdateGate } from '../src/components/UpdateGate';
 import { StatusBar } from 'expo-status-bar';
 
-// Force RTL globally before any layout is computed
-I18nManager.forceRTL(true);
+// Direction is handled in the stylesheets, not by the native RTL engine.
+// Every row uses an explicit flexDirection ('row' / 'row-reverse') and every
+// Arabic text an explicit textAlign:'right', all tuned against a fixed
+// (non-native-RTL) baseline. Native forceRTL is unreliable in Expo Go — the
+// flag only flips after a native restart, so `isRTL` differed between the first
+// launch and later reloads and the layout looked inconsistent page-to-page.
+// Pin the native direction to LTR so those hand-tuned styles are always
+// authoritative and every launch renders identically.
+I18nManager.allowRTL(false);
+I18nManager.forceRTL(false);
 
 // Initialize Sentry as early as possible
 initSentry();

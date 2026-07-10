@@ -57,10 +57,23 @@ Sentry · Claude API (`claude-opus-4-8`) via a Supabase Edge Function.
   `babel.config.js`), `react-native-gesture-handler`, `react-native-svg`,
   `expo-haptics`, `expo-audio`, `moti`. Root wrapped in `GestureHandlerRootView`.
 - **Lumi** (`src/components/Lumi.tsx`) is the mascot — currently an animated SVG
-  placeholder in Lumi's palette. **Swap-ready for real art:** set
-  `USE_REAL_ART = true` and drop transparent PNG sprites into `assets/lumi/`
-  (idle / wave / celebrate at minimum). The `<Lumi state=... size=.../>` API
-  never changes, so no call sites need editing.
+  placeholder in Lumi's palette. **Swap-ready for real art:** `assets/lumi/`
+  already holds 5 transparent 1×1 placeholder PNGs wired via `require`, so
+  turning on the real art is a **one-line change** (`USE_REAL_ART = true`) once
+  you replace those files with the real transparent-background renders. Which
+  design-sheet expression goes in each file:
+  - `idle.png` ← **Happy** · `wave.png` ← **Bye** · `celebrate.png` ← **Excited**
+    · `encourage.png` ← **Encouraging** · `sad.png` ← **Sad**
+  - To cut them from the composite sheet: on iPhone, long-press the character to
+    lift it off the background (or use remove.bg / Photoroom), export each as PNG
+    with a transparent background, name them exactly as above, and drop them into
+    `arabic-app/assets/lumi/`. The `<Lumi state=… size=… />` API never changes.
+- **RTL is pinned to native LTR** (`app/_layout.tsx`: `allowRTL(false)` +
+  `forceRTL(false)`). Direction is controlled entirely in the stylesheets
+  (explicit `row-reverse` + `textAlign:'right'`), because native `forceRTL(true)`
+  was unreliable in Expo Go (only flips after a native restart → inconsistent
+  layout between launches). After pulling this change, **fully quit and reopen**
+  the app once so the native flag clears.
 - Theme is the **Lumi palette** (`src/theme/index.ts`); all pairs WCAG-AA
   verified in `src/__tests__/contrast.test.ts`.
 
