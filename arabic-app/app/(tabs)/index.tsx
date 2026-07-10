@@ -50,7 +50,10 @@ export default function TodayScreen() {
       </View>
     );
   }
-  if (isError) {
+  // An empty list means content failed to load (or the track is empty) — NOT
+  // that the user finished everything. Treat it as an error, otherwise a brand
+  // new user would see the "all done 🎉" celebration before their first lesson.
+  if (isError || lessons.length === 0) {
     return (
       <View style={[styles.container, styles.centered]}>
         <Text style={styles.error}>{t('today.errorLoading')}</Text>

@@ -13,7 +13,7 @@ const SLIDES = 3;
 export default function OnboardingScreen() {
   const { t } = useTranslation();
   const { complete } = useOnboarding();
-  const { settings, update } = useNotificationSettings();
+  const { settings, isLoaded: settingsLoaded, update } = useNotificationSettings();
 
   const [step, setStep] = useState(0);
   const [interest, setInterest] = useState<string | null>(null);
@@ -84,6 +84,7 @@ export default function OnboardingScreen() {
               <Text style={styles.reminderLabel}>{t('onboarding.enableReminder')}</Text>
               <Switch
                 value={settings.enabled}
+                disabled={!settingsLoaded}
                 onValueChange={(v) => {
                   void update({ ...settings, enabled: v });
                 }}

@@ -64,6 +64,13 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       void logoutPurchases();
       return; // signed-out values are derived below, not set here
     }
+    // Reset entitlement before re-identifying. If the session switches straight
+    // from user A to user B (shared device, no signed-out frame), we must not
+    // keep reporting A's `isSubscribed: true` during the async re-identify —
+    // otherwise B briefly bypasses the paywall.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsSubscribed(false);
+    setIsLoading(true);
     try {
       configurePurchases(userId);
     } catch {
@@ -72,7 +79,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     // Syncing with an external SDK (RevenueCat) is the documented use-case for
     // effects; refresh() only calls setState after its first await, so there is
     // no synchronous cascading render — the rule can't see across the await.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
     const unsub = onCustomerInfoUpdate(applyInfo);
     return unsub;

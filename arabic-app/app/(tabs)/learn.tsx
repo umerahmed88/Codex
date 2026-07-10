@@ -146,7 +146,12 @@ function PathNode({
     >
       <View style={[styles.nodeSlot, { transform: [{ translateX: offset }] }]}>
         {isCurrent && (
-          <View style={styles.lumiBeside} pointerEvents="none">
+          // Keep Lumi on the inner side of the node so a node pushed toward the
+          // screen edge by `offset` doesn't clip the mascot off-screen.
+          <View
+            style={[styles.lumiBeside, offset > 0 ? styles.lumiLeft : styles.lumiRight]}
+            pointerEvents="none"
+          >
             <Lumi state="idle" size={52} />
           </View>
         )}
@@ -265,7 +270,9 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: colors.accent,
   },
-  lumiBeside: { position: 'absolute', right: -58, bottom: -4 },
+  lumiBeside: { position: 'absolute', bottom: -4 },
+  lumiRight: { right: -58 },
+  lumiLeft: { left: -58 },
   hereTag: {
     marginTop: spacing.sm,
     backgroundColor: colors.surface,

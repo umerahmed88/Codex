@@ -30,13 +30,19 @@ export function useOfflineSync(userId: string | undefined) {
         if (queue.length === 0) return;
 
         // Fetch lessons once so we can resolve each queued lessonId + unlock next.
-        const { data: lessons } = await supabase.from('lessons').select('*');
-        const allLessons = (lessons ?? []) as Lesson[];
+        // If this fails (flaky network, cold auth token, RLS) we must NOT treat
+        // an empty result as "all lessons deleted" — that would drop the queue
+        // and lose the user's completions. Abort and retry on the next flush.
+        const { data: lessons, error } = await supabase.from('lessons').select('*');
+        if (error || !lessons) return;
+        const allLessons = lessons as Lesson[];
+        if (allLessons.length === 0) return; // no content loaded — try again later
 
         for (const item of queue) {
           const lesson = allLessons.find((l) => l.id === item.lessonId);
           if (!lesson) {
-            // Unknown lesson (deleted?) — drop it to avoid a stuck queue.
+            // The lesson genuinely no longer exists in a successfully-loaded
+            // catalog — drop it to avoid a permanently stuck queue.
             await removeFromQueue(AsyncStorage, item.lessonId);
             continue;
           }
