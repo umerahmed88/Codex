@@ -3,13 +3,19 @@
 // react-native-svg and animated with Reanimated (idle bob, wave, celebrate
 // bounce, encourage nod). Honors reduce-motion.
 //
-// SWAP-READY: this is a stand-in for Lumi's real character art. When
-// transparent PNG sprites land in assets/lumi (idle/wave/celebrate/…), flip
-// USE_REAL_ART to true and drop them into SPRITES below — every call site
-// (<Lumi state="wave" size={96} />) stays identical.
+// SWAP-READY: this is a stand-in for Lumi's real character art. To use the real
+// character sheet, replace the 5 placeholder files in assets/lumi/ with
+// transparent-background PNGs and flip USE_REAL_ART to true — every call site
+// (<Lumi state="wave" size={96} />) stays identical. The state → expression
+// mapping (which cell of the design sheet each file should come from):
+//   idle.png      ← "Happy"        (resting/neutral)
+//   wave.png      ← "Bye"          (the waving pose)
+//   celebrate.png ← "Excited"      (lesson complete)
+//   encourage.png ← "Encouraging"  (thumbs-up)
+//   sad.png       ← "Sad"          (empathetic)
 // ============================================================================
 import { memo, useEffect } from 'react';
-import { View, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Ellipse, Circle, Path, Polygon, G } from 'react-native-svg';
 import Animated, {
   useSharedValue,
@@ -31,15 +37,18 @@ interface Props {
   style?: StyleProp<ViewStyle>;
 }
 
-// --- Real-art hook (disabled until transparent PNGs are added) ---------------
+// --- Real-art hook -----------------------------------------------------------
+// Flip to true once assets/lumi/*.png hold the real transparent character art.
+// (The files exist as 1×1 transparent placeholders so the bundler resolves the
+// requires and the swap is a single one-line change.)
 const USE_REAL_ART = false;
-// const SPRITES: Record<LumiState, number> = {
-//   idle: require('../../assets/lumi/idle.png'),
-//   wave: require('../../assets/lumi/wave.png'),
-//   celebrate: require('../../assets/lumi/celebrate.png'),
-//   encourage: require('../../assets/lumi/encourage.png'),
-//   sad: require('../../assets/lumi/sad.png'),
-// };
+const SPRITES: Record<LumiState, number> = {
+  idle: require('../../assets/lumi/idle.png'),
+  wave: require('../../assets/lumi/wave.png'),
+  celebrate: require('../../assets/lumi/celebrate.png'),
+  encourage: require('../../assets/lumi/encourage.png'),
+  sad: require('../../assets/lumi/sad.png'),
+};
 
 export function Lumi({ state = 'idle', size = 96, style }: Props) {
   const ty = useSharedValue(0);
@@ -106,8 +115,11 @@ export function Lumi({ state = 'idle', size = 96, style }: Props) {
       importantForAccessibility="no-hide-descendants"
     >
       {USE_REAL_ART ? (
-        // <Image source={SPRITES[state]} style={{ width: size, height: size * 1.1 }} resizeMode="contain" />
-        <View />
+        <Image
+          source={SPRITES[state]}
+          style={{ width: size, height: size * 1.1 }}
+          resizeMode="contain"
+        />
       ) : (
         <LumiArt state={state} size={size} />
       )}

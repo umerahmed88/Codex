@@ -105,8 +105,12 @@ export default function CoachScreen() {
       requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
     } catch (e) {
       const code = e instanceof Error ? e.message : 'coach_error';
+      // Did the stream already emit any content? If so the server already
+      // accepted and recorded this question — retrying via the buffered path
+      // would double-charge the daily limit and post a duplicate answer.
+      const streamStarted = bubbleIndex !== -1;
       // Remove a half-written bubble before retrying or showing an error.
-      if (bubbleIndex !== -1) {
+      if (streamStarted) {
         const idx = bubbleIndex;
         setTurns((prev) => prev.filter((_, i) => i !== idx));
       }
@@ -114,9 +118,14 @@ export default function CoachScreen() {
         setError(t('coach.rateLimited'));
       } else if (code === 'rate_limited_burst' || code === 'question_too_long') {
         setError(t('coach.error'));
-      } else {
-        // Transport/streaming problem — retry through the buffered path.
+      } else if (!streamStarted) {
+        // Transport failed before the server processed anything — safe to retry
+        // through the buffered path.
         sendNonStreaming(question);
+      } else {
+        // Stream broke mid-answer; the request was already counted. Don't
+        // re-send — just surface the error.
+        setError(t('coach.error'));
       }
     } finally {
       setStreaming(false);

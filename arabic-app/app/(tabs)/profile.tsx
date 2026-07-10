@@ -30,7 +30,7 @@ export default function ProfileScreen() {
 
   const { data: streak } = useStreak(userId);
   const { data: xp } = useXp(userId);
-  const { settings, update } = useNotificationSettings();
+  const { settings, isLoaded: settingsLoaded, update } = useNotificationSettings();
   const feedbackEnabled = useFeatureFlag('feedback');
   const fmt = useFormatNumber();
 
@@ -107,7 +107,11 @@ export default function ProfileScreen() {
         <Text style={styles.sectionTitle}>{t('profile.reminderTitle')}</Text>
         <View style={styles.settingRow}>
           <Text style={styles.settingLabel}>{t('profile.reminderEnabled')}</Text>
-          <Switch value={settings.enabled} onValueChange={onToggleReminder} />
+          <Switch
+            value={settings.enabled}
+            disabled={!settingsLoaded}
+            onValueChange={onToggleReminder}
+          />
         </View>
         {settings.enabled && (
           <Pressable style={styles.settingRow} onPress={() => setShowPicker(true)}>

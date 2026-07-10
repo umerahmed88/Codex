@@ -11,6 +11,7 @@ import { useCompleteLesson } from '../../src/hooks/useCompleteLesson';
 import { shouldShowPaywall } from '../../src/lib/entitlements';
 import { isPurchasesConfigured } from '../../src/lib/purchases';
 import { milestoneForStreak, type Milestone } from '../../src/lib/milestones';
+import { useFormatNumber } from '../../src/hooks/useFormatNumber';
 import { Button } from '../../src/components/Button';
 import { CelebrationOverlay } from '../../src/components/CelebrationOverlay';
 import { colors, spacing, typography } from '../../src/theme';
@@ -18,6 +19,7 @@ import { colors, spacing, typography } from '../../src/theme';
 export default function LessonPlayerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const fmt = useFormatNumber();
   const router = useRouter();
   const { session } = useAuth();
   const userId = session?.user.id;
@@ -81,9 +83,17 @@ export default function LessonPlayerScreen() {
       },
       {
         onSuccess: (data) => {
-          // Every completion celebrates (+10 XP); a milestone adds the fanfare.
           const newStreak = data.nextStreak.current_streak;
-          setCelebration({ xp: 10, streak: newStreak, milestone: milestoneForStreak(newStreak) });
+          // The RPC is idempotent per day: a repeat completion (same lesson, or
+          // another lesson after today's streak already advanced) returns
+          // alreadyCompleted. Don't re-award/re-celebrate a milestone the streak
+          // didn't actually just reach.
+          const milestone = data.alreadyCompleted ? null : milestoneForStreak(newStreak);
+          setCelebration({
+            xp: data.alreadyCompleted ? 0 : 10,
+            streak: newStreak,
+            milestone,
+          });
         },
       }
     );
@@ -103,7 +113,7 @@ export default function LessonPlayerScreen() {
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.lessonTitle}>{merged.title_ar}</Text>
-          <Text style={styles.meta}>{t('today.minutes', { count: merged.est_minutes })}</Text>
+          <Text style={styles.meta}>{t('today.minutes', { count: fmt(merged.est_minutes) })}</Text>
 
           {/* Media placeholder — a real audio/video player lands with real media. */}
           {merged.media_type !== 'text' && merged.media_url && (
