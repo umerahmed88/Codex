@@ -9,7 +9,8 @@ import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useStreak, useXp } from '../../src/hooks/useStreakXp';
 import { useNotificationSettings } from '../../src/hooks/useNotificationSettings';
 import { useFeatureFlag } from '../../src/hooks/useAppConfig';
-import { useFormatNumber } from '../../src/hooks/useFormatNumber';
+import { useCountText } from '../../src/hooks/useCountText';
+import { nextMilestone } from '../../src/lib/milestones';
 import { unregisterPushToken } from '../../src/lib/pushTokens';
 import { isPurchasesConfigured } from '../../src/lib/purchases';
 import { StreakBadge } from '../../src/components/StreakBadge';
@@ -32,7 +33,7 @@ export default function ProfileScreen() {
   const { data: xp } = useXp(userId);
   const { settings, isLoaded: settingsLoaded, update } = useNotificationSettings();
   const feedbackEnabled = useFeatureFlag('feedback');
-  const fmt = useFormatNumber();
+  const countText = useCountText();
 
   // "Manage subscription" deep-links to the store's subscription settings.
   const manageSubscription = () => {
@@ -49,6 +50,7 @@ export default function ProfileScreen() {
   const today = toDayString(new Date());
   const streakState = streak ?? { current_streak: 0, longest_streak: 0, last_active_date: null };
   const active = isStreakActive(streakState, today);
+  const upcoming = nextMilestone(streakState.current_streak);
 
   const toggleLocale = () => {
     // setLocale persists the choice so it survives app restarts (Phase 12).
@@ -77,8 +79,14 @@ export default function ProfileScreen() {
       <View style={styles.card}>
         <View style={styles.streakRow}>
           <StreakBadge count={streakState.current_streak} active={active} />
-          <Text style={styles.longest}>{t('gamify.longest', { count: fmt(streakState.longest_streak) })}</Text>
+          <Text style={styles.longest}>{countText('gamify.longest', streakState.longest_streak)}</Text>
         </View>
+        {/* Duolingo-style nudge: how far to the next streak milestone. */}
+        {upcoming && (
+          <Text style={styles.milestoneHint}>
+            {upcoming.emoji} {countText('gamify.nextMilestone', upcoming.days - streakState.current_streak)}
+          </Text>
+        )}
         <LevelProgress totalXp={xp?.total_xp ?? 0} />
       </View>
 
@@ -195,6 +203,13 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.arabic,
     fontSize: typography.size.sm,
     color: colors.textMuted,
+  },
+  milestoneHint: {
+    fontFamily: typography.fontFamily.arabicSemiBold,
+    fontSize: typography.size.sm,
+    color: colors.primaryDark,
+    marginTop: spacing.sm,
+    textAlign: 'right',
   },
   sectionTitle: {
     fontFamily: typography.fontFamily.arabicBold,

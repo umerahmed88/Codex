@@ -77,7 +77,26 @@ Sentry · Claude API (`claude-opus-4-8`) via a Supabase Edge Function.
 - Theme is the **Lumi palette** (`src/theme/index.ts`); all pairs WCAG-AA
   verified in `src/__tests__/contrast.test.ts`.
 
-**Tests:** `npm test` → 138 passing (logic + component projects). `npx tsc --noEmit` clean. `npm run lint` clean. `npx expo export --platform ios` bundles.
+**Ship-readiness pass (post-U4):**
+- **Arabic pluralization done right** — `src/lib/plural.ts` selects the six CLDR
+  Arabic forms **without relying on `Intl.PluralRules`** (Hermes doesn't
+  guarantee it; jest does — that asymmetry would hide device bugs). Counted
+  phrases (`today.minutes`, `coach.remaining`, `gamify.longest`,
+  `gamify.nextMilestone`) define all six forms in BOTH locales and render via
+  `useCountText` with Arabic-Indic digits. Never pass `fmt(...)` strings as
+  `count` to `t()`.
+- **Error states are recoverable** — Today/Learn/lesson error views show a
+  retry button wired to `useTrackData().refetch()` (plus a sad Lumi).
+- **Coach stream is abortable** — leaving the screen aborts the fetch
+  (`askCoachStream({ signal })`; error code `'aborted'` is swallowed).
+- **Learn path is virtualized** (FlatList) for long tracks.
+- **Brand assets are real** — generated Lumi-brand icon set (gold star on teal:
+  `icon.png`, adaptive fg/bg/monochrome, splash, favicon) + `app.json` splash
+  (cream) and teal adaptive background. Regenerate via
+  `scripts/`-independent one-off (see git history) or replace with studio art.
+- Milestone nudge ("X days to your next milestone") now shown on Profile.
+
+**Tests:** `npm test` → 165 passing (logic + component projects). `npx tsc --noEmit` clean. `npm run lint` clean. `npx expo export --platform ios` bundles.
 
 ## Repo layout
 

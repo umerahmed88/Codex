@@ -9,6 +9,12 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "backgroundColor": "#F4EAD0",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F4EAD0"
+    },
     "scheme": "arabic-app",
     "jsEngine": "hermes",
     "ios": {
@@ -17,8 +23,10 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#1A3A5C",
-        "foregroundImage": "./assets/android-icon-foreground.png"
+        "backgroundColor": "#0A8571",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.riseguide.arabic"
     },

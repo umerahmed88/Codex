@@ -11,7 +11,7 @@ import { useCompleteLesson } from '../../src/hooks/useCompleteLesson';
 import { shouldShowPaywall } from '../../src/lib/entitlements';
 import { isPurchasesConfigured } from '../../src/lib/purchases';
 import { milestoneForCompletion, type Milestone } from '../../src/lib/milestones';
-import { useFormatNumber } from '../../src/hooks/useFormatNumber';
+import { useCountText } from '../../src/hooks/useCountText';
 import { Button } from '../../src/components/Button';
 import { CelebrationOverlay } from '../../src/components/CelebrationOverlay';
 import { colors, spacing, typography } from '../../src/theme';
@@ -19,14 +19,14 @@ import { colors, spacing, typography } from '../../src/theme';
 export default function LessonPlayerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
-  const fmt = useFormatNumber();
+  const countText = useCountText();
   const router = useRouter();
   const { session } = useAuth();
   const userId = session?.user.id;
 
   const { isSubscribed } = useSubscription();
   const paywallActive = useFeatureFlag('paywall') && isPurchasesConfigured();
-  const { lessons, rawLessons, isLoading, isError } = useTrackData(userId);
+  const { lessons, rawLessons, isLoading, isError, refetch } = useTrackData(userId);
   const { data: streak } = useStreak(userId);
   const { data: xp } = useXp(userId);
   const complete = useCompleteLesson();
@@ -59,6 +59,7 @@ export default function LessonPlayerScreen() {
     return (
       <View style={[styles.container, styles.centered]}>
         <Text style={styles.error}>{t('today.errorLoading')}</Text>
+        <Button title={t('common.retry')} onPress={refetch} style={styles.retry} />
       </View>
     );
   }
@@ -123,7 +124,7 @@ export default function LessonPlayerScreen() {
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.lessonTitle}>{merged.title_ar}</Text>
-          <Text style={styles.meta}>{t('today.minutes', { count: fmt(merged.est_minutes) })}</Text>
+          <Text style={styles.meta}>{countText('today.minutes', merged.est_minutes)}</Text>
 
           {/* Media placeholder — a real audio/video player lands with real media. */}
           {merged.media_type !== 'text' && merged.media_url && (
@@ -162,7 +163,8 @@ export default function LessonPlayerScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  centered: { alignItems: 'center', justifyContent: 'center' },
+  centered: { alignItems: 'center', justifyContent: 'center', gap: spacing.md },
+  retry: { alignSelf: 'stretch', marginHorizontal: spacing.xl, marginTop: spacing.sm },
   scroll: { padding: spacing.lg },
   error: {
     fontFamily: typography.fontFamily.arabic,

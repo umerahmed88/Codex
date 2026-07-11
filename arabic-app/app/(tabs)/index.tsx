@@ -13,9 +13,11 @@ import { isPurchasesConfigured } from '../../src/lib/purchases';
 import { isStreakActive, toDayString } from '../../src/lib/streak';
 import { levelProgress } from '../../src/lib/xp';
 import { useFormatNumber } from '../../src/hooks/useFormatNumber';
+import { useCountText } from '../../src/hooks/useCountText';
 import { StreakBadge } from '../../src/components/StreakBadge';
 import { Lumi } from '../../src/components/Lumi';
 import { PressableScale } from '../../src/components/PressableScale';
+import { Button } from '../../src/components/Button';
 import { AnimatedCounter } from '../../src/components/AnimatedCounter';
 import type { LessonWithProgress } from '../../src/types/database';
 import { colors, spacing, typography, radius, shadows } from '../../src/theme';
@@ -24,13 +26,14 @@ export default function TodayScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const fmt = useFormatNumber();
+  const countText = useCountText();
   const reduced = useReducedMotion();
   const { session } = useAuth();
   const userId = session?.user.id;
 
   const { isSubscribed } = useSubscription();
   const paywallActive = useFeatureFlag('paywall') && isPurchasesConfigured();
-  const { lessons, isLoading, isError } = useTrackData(userId);
+  const { lessons, isLoading, isError, refetch } = useTrackData(userId);
   const { data: streak } = useStreak(userId);
   const { data: xp } = useXp(userId);
 
@@ -56,7 +59,9 @@ export default function TodayScreen() {
   if (isError || lessons.length === 0) {
     return (
       <View style={[styles.container, styles.centered]}>
+        <Lumi state="sad" size={96} />
         <Text style={styles.error}>{t('today.errorLoading')}</Text>
+        <Button title={t('common.retry')} onPress={refetch} style={styles.retry} />
       </View>
     );
   }
@@ -87,7 +92,7 @@ export default function TodayScreen() {
             </View>
           </View>
           <Text style={styles.heroTitle}>{todaysLesson.title_ar}</Text>
-          <Text style={styles.heroMeta}>{t('today.minutes', { count: fmt(todaysLesson.est_minutes) })}</Text>
+          <Text style={styles.heroMeta}>{countText('today.minutes', todaysLesson.est_minutes)}</Text>
           <PressableScale style={styles.cta} onPress={() => openLesson(todaysLesson)}>
             <Text style={styles.ctaText}>{t('today.start')}</Text>
           </PressableScale>
@@ -133,7 +138,8 @@ export default function TodayScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
+  retry: { alignSelf: 'stretch', marginHorizontal: spacing.xl, marginTop: spacing.sm },
   muted: {
     fontFamily: typography.fontFamily.arabic,
     fontSize: typography.size.sm,

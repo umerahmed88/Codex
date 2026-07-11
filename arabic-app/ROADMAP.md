@@ -60,6 +60,12 @@ lessons, and fixes offline-replay / non-UTC streak math (**user must run it**).
 **Tests:** 138 passing (logic + component). `tsc` clean, `lint` clean, iOS
 bundle exports (runs in Expo Go).
 
+### Ship-readiness pass (post-redesign)
+- Real Arabic pluralization (6 CLDR forms, engine-independent) + Arabic-Indic
+  digits in every counted phrase; retry buttons on all error states; abortable
+  coach streaming; virtualized lesson path; branded icon/splash set + splash
+  config; Profile milestone nudge. Tests: **165 passing**.
+
 ## Deferred (intentionally not built)
 
 - **Audio/video lessons** — schema supports `media_type`/`media_url`, but the

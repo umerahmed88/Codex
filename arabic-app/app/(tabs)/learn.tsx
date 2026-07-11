@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, ActivityIndicator } from 'react-native';
 import Animated, {
   FadeInDown,
   useSharedValue,
@@ -23,6 +23,7 @@ import { isPurchasesConfigured } from '../../src/lib/purchases';
 import { fxPop } from '../../src/lib/fx';
 import { Lumi } from '../../src/components/Lumi';
 import { PressableScale } from '../../src/components/PressableScale';
+import { Button } from '../../src/components/Button';
 import type { LessonWithProgress, Track } from '../../src/types/database';
 import { colors, spacing, typography, radius } from '../../src/theme';
 
@@ -32,7 +33,7 @@ export default function LearnScreen() {
   const { session } = useAuth();
   const { isSubscribed } = useSubscription();
   const paywallActive = useFeatureFlag('paywall') && isPurchasesConfigured();
-  const { track, tracks, lessons, isLoading, isError } = useTrackData(session?.user.id);
+  const { track, tracks, lessons, isLoading, isError, refetch } = useTrackData(session?.user.id);
   const selectTrack = useSelectedTrack((s) => s.select);
 
   const openLesson = (lesson: LessonWithProgress) => {
@@ -54,7 +55,9 @@ export default function LearnScreen() {
   if (isError) {
     return (
       <View style={[styles.container, styles.centered]}>
+        <Lumi state="sad" size={96} />
         <Text style={styles.error}>{t('learn.error')}</Text>
+        <Button title={t('common.retry')} onPress={refetch} style={styles.retry} />
       </View>
     );
   }
@@ -91,19 +94,23 @@ export default function LearnScreen() {
         </ScrollView>
       )}
 
-      <ScrollView contentContainerStyle={styles.path}>
-        {lessons.length === 0 && <Text style={styles.empty}>{t('learn.empty')}</Text>}
-        {lessons.map((lesson, i) => (
+      {/* Virtualized: long tracks (30+ lessons) render lazily instead of
+          mounting every node (and its animations) at once. */}
+      <FlatList
+        data={lessons}
+        keyExtractor={(l) => l.id}
+        contentContainerStyle={styles.path}
+        ListEmptyComponent={<Text style={styles.empty}>{t('learn.empty')}</Text>}
+        renderItem={({ item, index }) => (
           <PathNode
-            key={lesson.id}
-            lesson={lesson}
-            index={i}
-            isCurrent={lesson.id === currentId}
-            isLast={i === lessons.length - 1}
-            onPress={() => openLesson(lesson)}
+            lesson={item}
+            index={index}
+            isCurrent={item.id === currentId}
+            isLast={index === lessons.length - 1}
+            onPress={() => openLesson(item)}
           />
-        ))}
-      </ScrollView>
+        )}
+      />
     </View>
   );
 }
@@ -201,7 +208,8 @@ function PulseRing() {
 const NODE = 62;
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, padding: spacing.lg },
-  centered: { alignItems: 'center', justifyContent: 'center' },
+  centered: { alignItems: 'center', justifyContent: 'center', gap: spacing.md },
+  retry: { alignSelf: 'stretch', marginHorizontal: spacing.xl, marginTop: spacing.sm },
   error: {
     fontFamily: typography.fontFamily.arabic,
     fontSize: typography.size.md,
