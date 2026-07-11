@@ -70,6 +70,11 @@ export default function LessonPlayerScreen() {
     // Capture the streak BEFORE completing so we can tell whether this
     // completion actually advanced it (invalidation only refetches in onSettled,
     // which runs after onSuccess — but capturing here is unambiguous).
+    // `streak` is undefined only while the query is still loading; if we don't
+    // yet know the previous value we can't reliably detect an advance, so we
+    // suppress the milestone rather than risk a FALSE "you hit a streak!" fanfare
+    // (a rare missed celebration is far better than a wrong one).
+    const prevStreakKnown = streak !== undefined;
     const prevStreak = streak?.current_streak ?? 0;
     complete.mutate(
       {
@@ -91,7 +96,9 @@ export default function LessonPlayerScreen() {
           // Fire a milestone ONLY when this completion advanced the streak to a
           // threshold — never on a same-day repeat or an already-completed lesson
           // (see milestoneForCompletion).
-          const milestone = milestoneForCompletion(prevStreak, newStreak, data.alreadyCompleted);
+          const milestone = prevStreakKnown
+            ? milestoneForCompletion(prevStreak, newStreak, data.alreadyCompleted)
+            : null;
           setCelebration({
             xp: data.alreadyCompleted ? 0 : 10,
             streak: newStreak,
