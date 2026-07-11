@@ -32,7 +32,11 @@ interface CompleteLessonResult {
 export async function completeLessonWrites({
   lesson,
   completedDay,
-}: CompleteWritesArgs): Promise<{ nextStreak: StreakState; newXp: number }> {
+}: CompleteWritesArgs): Promise<{
+  nextStreak: StreakState;
+  newXp: number;
+  alreadyCompleted: boolean;
+}> {
   const { data, error } = await supabase.rpc('complete_lesson', {
     p_lesson_id: lesson.id,
     p_completed_day: completedDay,
@@ -47,5 +51,6 @@ export async function completeLessonWrites({
       last_active_date: result.last_active_date,
     },
     newXp: result.total_xp,
+    alreadyCompleted: result.already_completed,
   };
 }

@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useOnboarding } from '../../src/hooks/useOnboarding';
 import { useNotificationSettings } from '../../src/hooks/useNotificationSettings';
 import { Button } from '../../src/components/Button';
+import { Lumi } from '../../src/components/Lumi';
 import { colors, spacing, typography, radius } from '../../src/theme';
 
 const SLIDES = 3;
@@ -12,7 +13,7 @@ const SLIDES = 3;
 export default function OnboardingScreen() {
   const { t } = useTranslation();
   const { complete } = useOnboarding();
-  const { settings, update } = useNotificationSettings();
+  const { settings, isLoaded: settingsLoaded, update } = useNotificationSettings();
 
   const [step, setStep] = useState(0);
   const [interest, setInterest] = useState<string | null>(null);
@@ -42,7 +43,7 @@ export default function OnboardingScreen() {
       <View style={styles.body}>
         {step === 0 && (
           <>
-            <Text style={styles.emoji}>🌱</Text>
+            <Lumi state="wave" size={132} />
             <Text style={styles.title}>{t('onboarding.slide1Title')}</Text>
             <Text style={styles.text}>{t('onboarding.slide1Body')}</Text>
           </>
@@ -83,6 +84,7 @@ export default function OnboardingScreen() {
               <Text style={styles.reminderLabel}>{t('onboarding.enableReminder')}</Text>
               <Switch
                 value={settings.enabled}
+                disabled={!settingsLoaded}
                 onValueChange={(v) => {
                   void update({ ...settings, enabled: v });
                 }}

@@ -2,6 +2,9 @@ import '../src/lib/i18n'; // must be first
 import { initSentry } from '../src/lib/sentry';
 import { useEffect } from 'react';
 import { I18nManager, View } from 'react-native';
+// Importing GestureHandlerRootView also loads the gesture-handler module
+// (its side effects) — no separate bare import needed.
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { OfflineBanner } from '../src/components/OfflineBanner';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
@@ -17,8 +20,16 @@ import { useOnboarding } from '../src/hooks/useOnboarding';
 import { UpdateGate } from '../src/components/UpdateGate';
 import { StatusBar } from 'expo-status-bar';
 
-// Force RTL globally before any layout is computed
-I18nManager.forceRTL(true);
+// Direction is handled in the stylesheets, not by the native RTL engine.
+// Every row uses an explicit flexDirection ('row' / 'row-reverse') and every
+// Arabic text an explicit textAlign:'right', all tuned against a fixed
+// (non-native-RTL) baseline. Native forceRTL is unreliable in Expo Go — the
+// flag only flips after a native restart, so `isRTL` differed between the first
+// launch and later reloads and the layout looked inconsistent page-to-page.
+// Pin the native direction to LTR so those hand-tuned styles are always
+// authoritative and every launch renders identically.
+I18nManager.allowRTL(false);
+I18nManager.forceRTL(false);
 
 // Initialize Sentry as early as possible
 initSentry();
@@ -107,25 +118,27 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <ErrorBoundary>
-      <PersistQueryClientProvider
-        client={queryClient}
-        persistOptions={{
-          persister: asyncStoragePersister,
-          maxAge: 1000 * 60 * 60 * 24, // 24h — matches gcTime above
-          dehydrateOptions: {
-            shouldDehydrateQuery: (query) =>
-              PERSISTED_QUERY_KEYS.includes(query.queryKey[0] as string),
-          },
-        }}
-      >
-        <AuthProvider>
-          <SubscriptionProvider>
-            <StatusBar style="light" />
-            <AuthGate />
-          </SubscriptionProvider>
-        </AuthProvider>
-      </PersistQueryClientProvider>
-    </ErrorBoundary>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ErrorBoundary>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{
+            persister: asyncStoragePersister,
+            maxAge: 1000 * 60 * 60 * 24, // 24h — matches gcTime above
+            dehydrateOptions: {
+              shouldDehydrateQuery: (query) =>
+                PERSISTED_QUERY_KEYS.includes(query.queryKey[0] as string),
+            },
+          }}
+        >
+          <AuthProvider>
+            <SubscriptionProvider>
+              <StatusBar style="light" />
+              <AuthGate />
+            </SubscriptionProvider>
+          </AuthProvider>
+        </PersistQueryClientProvider>
+      </ErrorBoundary>
+    </GestureHandlerRootView>
   );
 }

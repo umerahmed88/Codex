@@ -26,17 +26,28 @@ export function useCompleteLesson() {
 
   return useMutation({
     mutationFn: async ({ userId, lesson, trackLessons }: CompleteArgs) => {
+      // Capture the day ONCE and reuse it for both the RPC and any offline
+      // enqueue, so a request that spans local midnight can't credit two
+      // different days.
       const completedDay = toDayString(new Date());
-      return completeLessonWrites({ userId, lesson, trackLessons, completedDay });
-    },
-
-    onError: async (_err, variables) => {
-      // Offline (or transient failure): remember it so it syncs on reconnect.
-      await enqueueCompletion(AsyncStorage, {
-        lessonId: variables.lesson.id,
-        completedDay: toDayString(new Date()),
-        enqueuedAt: new Date().toISOString(),
-      });
+      try {
+        return await completeLessonWrites({ userId, lesson, trackLessons, completedDay });
+      } catch (err) {
+        // Only queue for retry when the request never reached the server
+        // (offline / network). A server rejection carries a Postgres error code
+        // (e.g. 'lesson is locked', auth) — queuing that would retry a doomed
+        // call on every foreground forever, so we drop it instead.
+        const code = (err as { code?: unknown })?.code;
+        const isServerRejection = typeof code === 'string' && code.length > 0;
+        if (!isServerRejection) {
+          await enqueueCompletion(AsyncStorage, {
+            lessonId: lesson.id,
+            completedDay,
+            enqueuedAt: new Date().toISOString(),
+          });
+        }
+        throw err;
+      }
     },
 
     onSettled: (_data, _err, variables) => {

@@ -28,15 +28,37 @@ export function isPurchasesConfigured(): boolean {
   return !!apiKey;
 }
 
-// Configure RevenueCat once at startup, tying purchases to the logged-in user
-// so entitlements follow them across devices.
+// RevenueCat must be configured exactly ONCE per process; user switches after
+// that go through logIn/logOut (calling configure again does NOT reset the
+// cached CustomerInfo, which would leak entitlements across users on a shared
+// device).
+let sdkInitialized = false;
+
+// Configure on first login, then re-identify on subsequent user switches.
 export function configurePurchases(appUserId: string) {
   const apiKey = Platform.select({ ios: iosKey, android: androidKey, default: '' });
   if (!apiKey) {
     console.warn('[purchases] Missing RevenueCat key for this platform — paywall disabled.');
     return;
   }
-  Purchases.configure({ apiKey, appUserID: appUserId });
+  if (!sdkInitialized) {
+    Purchases.configure({ apiKey, appUserID: appUserId });
+    sdkInitialized = true;
+  } else {
+    // Different user on the same running app — re-identify.
+    Purchases.logIn(appUserId).catch(() => {});
+  }
+}
+
+// Detach the RevenueCat identity on logout so the next user on this device does
+// NOT inherit the previous user's cached entitlement.
+export async function logoutPurchases(): Promise<void> {
+  if (!sdkInitialized) return;
+  try {
+    await Purchases.logOut();
+  } catch {
+    // Anonymous/already-logged-out — nothing to do.
+  }
 }
 
 // True if the customer currently holds the premium entitlement.

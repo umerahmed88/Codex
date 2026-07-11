@@ -6,7 +6,7 @@
 // ============================================================================
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { CustomerInfo } from 'react-native-purchases';
-import { configurePurchases, getCustomerInfo, hasPremium, onCustomerInfoUpdate } from './purchases';
+import { configurePurchases, getCustomerInfo, hasPremium, onCustomerInfoUpdate, logoutPurchases } from './purchases';
 import { supabase } from './supabase';
 import { useAuth } from './AuthProvider';
 
@@ -24,19 +24,25 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Push the current entitlement to Supabase so server-side checks agree.
+  // Best-effort mirror of the entitlement to Supabase. The server treats
+  // subscription_status as authoritative only from the RevenueCat webhook
+  // (migration 0008 ignores client writes), so a failure here is harmless.
   const syncToServer = async (subscribed: boolean) => {
     if (!userId) return;
-    await supabase
-      .from('users')
-      .update({ subscription_status: subscribed ? 'active' : 'free' })
-      .eq('id', userId);
+    try {
+      await supabase
+        .from('users')
+        .update({ subscription_status: subscribed ? 'active' : 'free' })
+        .eq('id', userId);
+    } catch {
+      // Non-fatal — the webhook is the source of truth.
+    }
   };
 
   const applyInfo = (info: CustomerInfo) => {
     const premium = hasPremium(info);
     setIsSubscribed(premium);
-    syncToServer(premium);
+    void syncToServer(premium);
   };
 
   const refresh = async () => {
@@ -52,7 +58,19 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    if (!userId) return; // signed-out values are derived below, not set here
+    if (!userId) {
+      // Signed out — drop the RevenueCat identity so the next user on this
+      // device can't inherit the previous user's cached entitlement.
+      void logoutPurchases();
+      return; // signed-out values are derived below, not set here
+    }
+    // Reset entitlement before re-identifying. If the session switches straight
+    // from user A to user B (shared device, no signed-out frame), we must not
+    // keep reporting A's `isSubscribed: true` during the async re-identify —
+    // otherwise B briefly bypasses the paywall.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsSubscribed(false);
+    setIsLoading(true);
     try {
       configurePurchases(userId);
     } catch {
@@ -61,7 +79,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     // Syncing with an external SDK (RevenueCat) is the documented use-case for
     // effects; refresh() only calls setState after its first await, so there is
     // no synchronous cascading render — the rule can't see across the await.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
     const unsub = onCustomerInfoUpdate(applyInfo);
     return unsub;

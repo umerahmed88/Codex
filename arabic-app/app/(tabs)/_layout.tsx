@@ -1,7 +1,12 @@
 import { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Text } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  useReducedMotion,
+} from 'react-native-reanimated';
 import { useAuth } from '../../src/lib/AuthProvider';
 import { useOfflineSync } from '../../src/hooks/useOfflineSync';
 import { registerPushToken } from '../../src/lib/pushTokens';
@@ -24,11 +29,14 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.accent,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: colors.primary,
-          borderTopWidth: 0,
+          backgroundColor: colors.surface,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          height: 64,
+          paddingTop: 6,
         },
         tabBarLabelStyle: {
           fontFamily: typography.fontFamily.arabic,
@@ -48,34 +56,44 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t('tabs.today'),
-          tabBarIcon: () => <TabIcon emoji="📅" />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="learn"
         options={{
           title: t('tabs.learn'),
-          tabBarIcon: () => <TabIcon emoji="📚" />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📚" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="coach"
         options={{
           title: t('tabs.coach'),
-          tabBarIcon: () => <TabIcon emoji="🤖" />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🤖" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: t('tabs.profile'),
-          tabBarIcon: () => <TabIcon emoji="👤" />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
         }}
       />
     </Tabs>
   );
 }
 
-function TabIcon({ emoji }: { emoji: string }) {
-  return <Text style={{ fontSize: 20 }}>{emoji}</Text>;
+function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
+  const scale = useSharedValue(1);
+  const reduced = useReducedMotion();
+  useEffect(() => {
+    if (reduced) {
+      scale.value = focused ? 1.15 : 1;
+      return;
+    }
+    scale.value = withSpring(focused ? 1.22 : 1, { damping: 9, stiffness: 320 });
+  }, [focused, reduced, scale]);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return <Animated.Text style={[{ fontSize: 22 }, style]}>{emoji}</Animated.Text>;
 }

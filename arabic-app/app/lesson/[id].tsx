@@ -10,14 +10,16 @@ import { useStreak, useXp } from '../../src/hooks/useStreakXp';
 import { useCompleteLesson } from '../../src/hooks/useCompleteLesson';
 import { shouldShowPaywall } from '../../src/lib/entitlements';
 import { isPurchasesConfigured } from '../../src/lib/purchases';
-import { milestoneForStreak, type Milestone } from '../../src/lib/milestones';
+import { milestoneForCompletion, type Milestone } from '../../src/lib/milestones';
+import { useFormatNumber } from '../../src/hooks/useFormatNumber';
 import { Button } from '../../src/components/Button';
-import { MilestoneCelebration } from '../../src/components/MilestoneCelebration';
+import { CelebrationOverlay } from '../../src/components/CelebrationOverlay';
 import { colors, spacing, typography } from '../../src/theme';
 
 export default function LessonPlayerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const fmt = useFormatNumber();
   const router = useRouter();
   const { session } = useAuth();
   const userId = session?.user.id;
@@ -28,7 +30,11 @@ export default function LessonPlayerScreen() {
   const { data: streak } = useStreak(userId);
   const { data: xp } = useXp(userId);
   const complete = useCompleteLesson();
-  const [milestone, setMilestone] = useState<Milestone | null>(null);
+  const [celebration, setCelebration] = useState<{
+    xp: number;
+    streak: number;
+    milestone: Milestone | null;
+  } | null>(null);
 
   const merged = lessons.find((l) => l.id === id);
   const raw = rawLessons?.find((l) => l.id === id);
@@ -61,6 +67,15 @@ export default function LessonPlayerScreen() {
 
   const handleComplete = () => {
     if (!userId || !rawLessons) return;
+    // Capture the streak BEFORE completing so we can tell whether this
+    // completion actually advanced it (invalidation only refetches in onSettled,
+    // which runs after onSuccess — but capturing here is unambiguous).
+    // `streak` is undefined only while the query is still loading; if we don't
+    // yet know the previous value we can't reliably detect an advance, so we
+    // suppress the milestone rather than risk a FALSE "you hit a streak!" fanfare
+    // (a rare missed celebration is far better than a wrong one).
+    const prevStreakKnown = streak !== undefined;
+    const prevStreak = streak?.current_streak ?? 0;
     complete.mutate(
       {
         userId,
@@ -77,13 +92,18 @@ export default function LessonPlayerScreen() {
       },
       {
         onSuccess: (data) => {
-          // Celebrate if this completion hit a milestone; otherwise go back.
-          const hit = milestoneForStreak(data.nextStreak.current_streak);
-          if (hit) {
-            setMilestone(hit);
-          } else {
-            router.back();
-          }
+          const newStreak = data.nextStreak.current_streak;
+          // Fire a milestone ONLY when this completion advanced the streak to a
+          // threshold — never on a same-day repeat or an already-completed lesson
+          // (see milestoneForCompletion).
+          const milestone = prevStreakKnown
+            ? milestoneForCompletion(prevStreak, newStreak, data.alreadyCompleted)
+            : null;
+          setCelebration({
+            xp: data.alreadyCompleted ? 0 : 10,
+            streak: newStreak,
+            milestone,
+          });
         },
       }
     );
@@ -103,7 +123,7 @@ export default function LessonPlayerScreen() {
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.lessonTitle}>{merged.title_ar}</Text>
-          <Text style={styles.meta}>{t('today.minutes', { count: merged.est_minutes })}</Text>
+          <Text style={styles.meta}>{t('today.minutes', { count: fmt(merged.est_minutes) })}</Text>
 
           {/* Media placeholder — a real audio/video player lands with real media. */}
           {merged.media_type !== 'text' && merged.media_url && (
@@ -126,10 +146,13 @@ export default function LessonPlayerScreen() {
         </View>
       </View>
 
-      <MilestoneCelebration
-        milestone={milestone}
+      <CelebrationOverlay
+        visible={!!celebration}
+        xpGained={celebration?.xp ?? 0}
+        streak={celebration?.streak ?? 0}
+        milestone={celebration?.milestone ?? null}
         onDismiss={() => {
-          setMilestone(null);
+          setCelebration(null);
           router.back();
         }}
       />

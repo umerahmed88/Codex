@@ -25,10 +25,14 @@
     "completed": "Completed ✓",
     "xpEarned": "+{{xp}} XP",
     "completing": "Saving...",
-    "savedOffline": "Your progress will save when you're back online."
+    "savedOffline": "Your progress will save when you're back online.",
+    "wellDone": "Well done!",
+    "continue": "Continue"
   },
   "learn": {
     "title": "Your Lessons",
+    "day": "Day {{day}}",
+    "here": "You're here",
     "locked": "Locked",
     "available": "Available",
     "completed": "Completed",
@@ -68,7 +72,17 @@
     "xpOf": "{{current}} / {{next}} XP",
     "celebrate": "Awesome!",
     "nextMilestone": "{{count}} days to your next milestone",
-    "longest": "Longest streak: {{count}}"
+    "longest": "Longest streak: {{count}}",
+    "milestones": {
+      "d3": "Three days in a row!",
+      "d7": "A full week — well done!",
+      "d14": "Two weeks of consistency",
+      "d30": "A whole month — amazing!"
+    }
+  },
+  "notifications": {
+    "title": "RiseGuide",
+    "reminderBody": "Today's lesson is waiting for you"
   },
   "paywall": {
     "title": "Unlock all lessons",

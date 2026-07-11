@@ -7,6 +7,7 @@
 // ============================================================================
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import i18n from './i18n';
 
 // A stable id so we only ever have ONE scheduled daily reminder (rescheduling
 // replaces it rather than stacking duplicates).
@@ -53,7 +54,7 @@ export async function scheduleDailyReminder(
 
   await Notifications.scheduleNotificationAsync({
     identifier: DAILY_REMINDER_ID,
-    content: { title: 'رايز غايد', body },
+    content: { title: i18n.t('notifications.title'), body },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
       hour,

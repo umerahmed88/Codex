@@ -35,10 +35,14 @@ describe('WCAG contrast — normal text pairs must clear AA (4.5:1)', () => {
     ['textSecondary on surface', colors.textSecondary, colors.surface],
     ['textMuted on background', colors.textMuted, colors.background],
     ['textMuted on surface', colors.textMuted, colors.surface],
-    ['textInverse on primary', colors.textInverse, colors.primary],
-    ['textInverse on primaryLight', colors.textInverse, colors.primaryLight],
-    ['primaryDark on accent (upgrade button)', colors.primaryDark, colors.accent],
+    ['textInverse on primary (buttons)', colors.textInverse, colors.primary],
+    ['textInverse on primaryLight (buttons)', colors.textInverse, colors.primaryLight],
+    ['textInverse on secondary (purple buttons)', colors.textInverse, colors.secondary],
+    ['textInverse on secondaryDark', colors.textInverse, colors.secondaryDark],
     ['primaryLight on surface (links)', colors.primaryLight, colors.surface],
+    ['primary on surface (active tab / links)', colors.primary, colors.surface],
+    ['primaryDark on accent (upgrade button)', colors.primaryDark, colors.accent],
+    ['navy on accent', colors.navy, colors.accent],
     ['warning as text on surface', colors.warning, colors.surface],
     ['warning as text on background', colors.warning, colors.background],
     ['textInverse on warning (offline banner)', colors.textInverse, colors.warning],
@@ -51,12 +55,11 @@ describe('WCAG contrast — normal text pairs must clear AA (4.5:1)', () => {
 });
 
 describe('WCAG contrast — large-text-only pairs must clear AA-large (3:1)', () => {
-  // These render only at large sizes (streak count is 20pt bold; success/accent
-  // labels are headings), so 3:1 is the applicable threshold.
+  // These render only at large sizes (streak count is 20pt+ bold; celebration
+  // headings), so 3:1 is the applicable threshold.
   const largePairs: [string, string, string][] = [
     ['streak count on surface', colors.streak, colors.surface],
     ['success on surface', colors.success, colors.surface],
-    ['accent on primary (active tab)', colors.accent, colors.primary],
   ];
 
   it.each(largePairs)('%s', (_label, fg, bg) => {
