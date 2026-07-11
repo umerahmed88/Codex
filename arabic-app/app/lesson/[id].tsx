@@ -10,7 +10,7 @@ import { useStreak, useXp } from '../../src/hooks/useStreakXp';
 import { useCompleteLesson } from '../../src/hooks/useCompleteLesson';
 import { shouldShowPaywall } from '../../src/lib/entitlements';
 import { isPurchasesConfigured } from '../../src/lib/purchases';
-import { milestoneForStreak, type Milestone } from '../../src/lib/milestones';
+import { milestoneForCompletion, type Milestone } from '../../src/lib/milestones';
 import { useFormatNumber } from '../../src/hooks/useFormatNumber';
 import { Button } from '../../src/components/Button';
 import { CelebrationOverlay } from '../../src/components/CelebrationOverlay';
@@ -67,6 +67,10 @@ export default function LessonPlayerScreen() {
 
   const handleComplete = () => {
     if (!userId || !rawLessons) return;
+    // Capture the streak BEFORE completing so we can tell whether this
+    // completion actually advanced it (invalidation only refetches in onSettled,
+    // which runs after onSuccess — but capturing here is unambiguous).
+    const prevStreak = streak?.current_streak ?? 0;
     complete.mutate(
       {
         userId,
@@ -84,11 +88,10 @@ export default function LessonPlayerScreen() {
       {
         onSuccess: (data) => {
           const newStreak = data.nextStreak.current_streak;
-          // The RPC is idempotent per day: a repeat completion (same lesson, or
-          // another lesson after today's streak already advanced) returns
-          // alreadyCompleted. Don't re-award/re-celebrate a milestone the streak
-          // didn't actually just reach.
-          const milestone = data.alreadyCompleted ? null : milestoneForStreak(newStreak);
+          // Fire a milestone ONLY when this completion advanced the streak to a
+          // threshold — never on a same-day repeat or an already-completed lesson
+          // (see milestoneForCompletion).
+          const milestone = milestoneForCompletion(prevStreak, newStreak, data.alreadyCompleted);
           setCelebration({
             xp: data.alreadyCompleted ? 0 : 10,
             streak: newStreak,

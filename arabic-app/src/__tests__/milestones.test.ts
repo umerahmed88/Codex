@@ -1,4 +1,9 @@
-import { milestoneForStreak, nextMilestone, MILESTONES } from '../lib/milestones';
+import {
+  milestoneForStreak,
+  milestoneForCompletion,
+  nextMilestone,
+  MILESTONES,
+} from '../lib/milestones';
 import ar from '../../locales/ar.json';
 import en from '../../locales/en.json';
 
@@ -14,6 +19,30 @@ describe('milestoneForStreak', () => {
     expect(milestoneForStreak(4)).toBeNull();
     expect(milestoneForStreak(8)).toBeNull();
     expect(milestoneForStreak(0)).toBeNull();
+  });
+});
+
+describe('milestoneForCompletion', () => {
+  it('fires when the streak advances to a threshold', () => {
+    expect(milestoneForCompletion(2, 3, false)?.days).toBe(3);
+    expect(milestoneForCompletion(6, 7, false)?.days).toBe(7);
+  });
+
+  it('does NOT re-fire on a same-day repeat (streak unchanged)', () => {
+    // Second lesson on the day the streak hit 7: newStreak === prevStreak.
+    expect(milestoneForCompletion(7, 7, false)).toBeNull();
+  });
+
+  it('does NOT fire when the lesson was already completed', () => {
+    expect(milestoneForCompletion(6, 7, true)).toBeNull();
+  });
+
+  it('does not fire when advancing to a non-threshold day', () => {
+    expect(milestoneForCompletion(3, 4, false)).toBeNull();
+  });
+
+  it('handles a reset streak (missed days → back to 1)', () => {
+    expect(milestoneForCompletion(9, 1, false)).toBeNull();
   });
 });
 
