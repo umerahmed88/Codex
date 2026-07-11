@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,12 +17,14 @@ import { useSubscription } from '../../src/lib/SubscriptionProvider';
 import { useAskCoach, useCoachQuestionsToday } from '../../src/hooks/useCoach';
 import { useFeatureFlag } from '../../src/hooks/useAppConfig';
 import { remainingQuestions, isQuestionValid, MAX_QUESTION_LENGTH, type CoachTurn } from '../../src/lib/coach';
+import { useCountText } from '../../src/hooks/useCountText';
 import { askCoachStream } from '../../src/lib/coachStream';
 import { track } from '../../src/lib/analytics';
 import { colors, spacing, typography, radius } from '../../src/theme';
 
 export default function CoachScreen() {
   const { t } = useTranslation();
+  const countText = useCountText();
   const router = useRouter();
   const { session } = useAuth();
   const userId = session?.user.id;
@@ -32,6 +34,12 @@ export default function CoachScreen() {
   const [error, setError] = useState<string | null>(null);
   const [streaming, setStreaming] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+  // Live stream cancellation — aborted when the screen unmounts so a
+  // navigation away can't leak the fetch or update a dead component.
+  const streamAbort = useRef<AbortController | null>(null);
+  useEffect(() => {
+    return () => streamAbort.current?.abort();
+  }, []);
 
   const { isSubscribed } = useSubscription();
   const coachEnabled = useFeatureFlag('coach');
@@ -73,12 +81,17 @@ export default function CoachScreen() {
     // Any streaming failure falls back to the buffered request — the user
     // never sees a worse experience than before.
     setStreaming(true);
+    // Abortable: navigating away mid-stream cancels the fetch instead of
+    // leaking it and firing setTurns on an unmounted screen.
+    const controller = new AbortController();
+    streamAbort.current = controller;
     // Index of the coach bubble we stream into (appended on first delta).
     let bubbleIndex = -1;
     try {
       const result = await askCoachStream({
         question,
         accessToken,
+        signal: controller.signal,
         onDelta: (textSoFar) => {
           setTurns((prev) => {
             if (bubbleIndex === -1) {
@@ -105,6 +118,9 @@ export default function CoachScreen() {
       requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
     } catch (e) {
       const code = e instanceof Error ? e.message : 'coach_error';
+      // Cancelled because the user left the screen — do nothing at all (no
+      // fallback request, no state updates on the unmounted component).
+      if (code === 'aborted') return;
       // Did the stream already emit any content? If so the server already
       // accepted and recorded this question — retrying via the buffered path
       // would double-charge the daily limit and post a duplicate answer.
@@ -179,7 +195,7 @@ export default function CoachScreen() {
       </ScrollView>
 
       {Number.isFinite(left) && (
-        <Text style={styles.remaining}>{t('coach.remaining', { count: left })}</Text>
+        <Text style={styles.remaining}>{countText('coach.remaining', left)}</Text>
       )}
 
       <View style={styles.inputRow}>

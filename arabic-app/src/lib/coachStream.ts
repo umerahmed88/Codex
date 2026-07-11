@@ -25,6 +25,9 @@ export interface AskCoachStreamArgs {
   accessToken: string; // the user's Supabase session JWT
   // Called with the FULL text so far on each chunk (simplest to render).
   onDelta: (textSoFar: string) => void;
+  // Abort mid-stream (screen unmounted, user navigated away). The promise
+  // rejects with code 'aborted', which callers should swallow silently.
+  signal?: AbortSignal;
 }
 
 export interface StreamedCoachAnswer {
@@ -38,11 +41,31 @@ export interface StreamedCoachAnswer {
 //   'rate_limited_burst'  — per-minute burst guard (429)
 //   'question_too_long'   — server-side length cap (400)
 //   'stream_unsupported'  — this runtime can't read streaming bodies
+//   'aborted'             — the caller cancelled (e.g. screen unmounted)
 //   'coach_error'         — anything else
 export async function askCoachStream({
   question,
   accessToken,
   onDelta,
+  signal,
+}: AskCoachStreamArgs): Promise<StreamedCoachAnswer> {
+  try {
+    return await doStream({ question, accessToken, onDelta, signal });
+  } catch (e) {
+    // Normalize every flavor of cancellation (fetch rejection, reader
+    // rejection, DOMException) to one stable code.
+    if (signal?.aborted || (e instanceof Error && e.name === 'AbortError')) {
+      throw new Error('aborted');
+    }
+    throw e;
+  }
+}
+
+async function doStream({
+  question,
+  accessToken,
+  onDelta,
+  signal,
 }: AskCoachStreamArgs): Promise<StreamedCoachAnswer> {
   const res = await expoFetch(`${SUPABASE_URL}/functions/v1/coach`, {
     method: 'POST',
@@ -52,6 +75,7 @@ export async function askCoachStream({
       apikey: SUPABASE_ANON_KEY,
     },
     body: JSON.stringify({ question, stream: true }),
+    signal,
   });
 
   if (!res.ok) {

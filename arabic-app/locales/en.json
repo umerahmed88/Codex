@@ -14,7 +14,14 @@
     "title": "Today's Lesson",
     "greeting": "Welcome back",
     "start": "Start Lesson",
-    "minutes": "{{count}} min",
+    "minutes": {
+      "zero": "{{num}} min",
+      "one": "{{num}} min",
+      "two": "{{num}} min",
+      "few": "{{num}} min",
+      "many": "{{num}} min",
+      "other": "{{num}} min"
+    },
     "allDone": "Well done! You've finished all available lessons for today.",
     "tomorrowPreview": "Tomorrow's lesson",
     "loading": "Loading...",
@@ -49,7 +56,14 @@
     "thinking": "Coach is thinking...",
     "error": "Couldn't get an answer. Please try again.",
     "rateLimited": "You've used your free questions for today. Subscribe for unlimited questions.",
-    "remaining": "{{count}} questions left today",
+    "remaining": {
+      "zero": "No questions left today",
+      "one": "{{num}} question left today",
+      "two": "{{num}} questions left today",
+      "few": "{{num}} questions left today",
+      "many": "{{num}} questions left today",
+      "other": "{{num}} questions left today"
+    },
     "disabled": "The AI Coach is temporarily unavailable. We'll be back soon."
   },
   "profile": {
@@ -71,8 +85,22 @@
     "level": "Level {{level}}",
     "xpOf": "{{current}} / {{next}} XP",
     "celebrate": "Awesome!",
-    "nextMilestone": "{{count}} days to your next milestone",
-    "longest": "Longest streak: {{count}}",
+    "nextMilestone": {
+      "zero": "Your next milestone is today!",
+      "one": "{{num}} day to your next milestone",
+      "two": "{{num}} days to your next milestone",
+      "few": "{{num}} days to your next milestone",
+      "many": "{{num}} days to your next milestone",
+      "other": "{{num}} days to your next milestone"
+    },
+    "longest": {
+      "zero": "Longest streak: {{num}} days",
+      "one": "Longest streak: {{num}} day",
+      "two": "Longest streak: {{num}} days",
+      "few": "Longest streak: {{num}} days",
+      "many": "Longest streak: {{num}} days",
+      "other": "Longest streak: {{num}} days"
+    },
     "milestones": {
       "d3": "Three days in a row!",
       "d7": "A full week — well done!",

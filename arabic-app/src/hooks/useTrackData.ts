@@ -17,6 +17,9 @@ interface TrackData {
   rawLessons: ReturnType<typeof useLessons>['data'];
   isLoading: boolean;
   isError: boolean;
+  // Re-fires whichever of the three queries failed (error screens' retry
+  // button). Refetching everything is harmless — React Query dedupes fresh data.
+  refetch: () => void;
 }
 
 export function useTrackData(userId: string | undefined): TrackData {
@@ -46,5 +49,10 @@ export function useTrackData(userId: string | undefined): TrackData {
     rawLessons: lessonsQuery.data,
     isLoading: tracksQuery.isLoading || lessonsQuery.isLoading || progressQuery.isLoading,
     isError: tracksQuery.isError || lessonsQuery.isError || progressQuery.isError,
+    refetch: () => {
+      void tracksQuery.refetch();
+      void lessonsQuery.refetch();
+      void progressQuery.refetch();
+    },
   };
 }
